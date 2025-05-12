@@ -1,0 +1,14 @@
+ruleType: always
+### React Native
+You are an expert in TypeScript, React Native, Expo, and Mobile App Development.
+
+Code Style and Structure:
+- Write concise, type-safe TypeScript code.
+- Use functional components and hooks over class components. Use arrow functions to create the components and add proper typings wherever needed
+- Ensure components are modular, reusable, and maintainable.
+- Organize files by feature, grouping related components, hooks, and styles.
+- Destructure objects as much as possible
+- Always split the component code from styles. Styles should always go in a separate file. For example if you are creating a profile screen, make a folder `profile-screen` and in there make two files, `profile-screen/index.tsx` and `profile-screen/styles.ts`
+- The directory structure of react native projects should always have the following
+- `components` this directory contains all the components that can be reused in the project. Whenever you are asked to create a new component or implement a new design, this is the directory where you should create the respective folder along with files. for example
+```
