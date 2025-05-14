@@ -1,10 +1,13 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
 import { useTheme } from "../../components/ui/ThemeProvider";
 import { useTranslation } from "react-i18next";
+import { profileApi } from "../../api";
+import { useAuth } from "../../contexts/AuthContext";
+import { format } from "date-fns";
 
 // Icon components
 const SearchIcon = () => (
@@ -186,9 +189,15 @@ const SettingsTabs = () => {
 function Dashboard() {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const { user: authUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeMenuItem, setActiveMenuItem] = useState("dashboard");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Client theme color - Green
   const themeColor = "bg-green-600";
@@ -201,12 +210,110 @@ function Dashboard() {
     { id: "settings", label: "Settings", icon: <SettingsIcon /> }
   ];
 
+  // Fetch profile data when component mounts
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Use the authUser data if available, otherwise fetch from API
+        if (authUser) {
+          setProfileData({
+            ...authUser,
+            // Add default values for fields that might not be in authUser
+            joinedDate: authUser.joinedDate || new Date().toISOString(),
+            accountType: authUser.accountType || "Personal",
+            country: authUser.country || "Unknown",
+            userId: authUser.id || "N/A",
+            verificationStatus: authUser.verificationStatus || "unverified"
+          });
+        } else {
+          const profileResponse = await profileApi.getProfile();
+          setProfileData(profileResponse);
+        }
+        
+        // Get verification status
+        try {
+          const verificationResponse = await profileApi.getVerificationStatus();
+          setVerificationStatus(verificationResponse);
+        } catch (verificationError) {
+          console.error("Failed to fetch verification status:", verificationError);
+          // Use default value if API fails
+          setVerificationStatus({ 
+            status: profileData?.verificationStatus || "unverified", 
+            message: "Verification status could not be retrieved" 
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile data:", err);
+        setError("Failed to load profile data. Please try again later.");
+        
+        // Use auth user data as fallback if API fails
+        if (authUser) {
+          setProfileData({
+            ...authUser,
+            joinedDate: new Date().toISOString(),
+            accountType: "Personal",
+            country: "Unknown",
+            verificationStatus: "unverified"
+          });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [authUser]);
+
   const toggleMobileSidebar = () => {
     setShowMobileSidebar(!showMobileSidebar);
   };
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+  };
+  
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const handleVerifyAccount = async () => {
+    try {
+      await profileApi.requestVerification();
+      alert("Verification request submitted successfully!");
+      // Refresh verification status
+      const verificationResponse = await profileApi.getVerificationStatus();
+      setVerificationStatus(verificationResponse);
+    } catch (err) {
+      console.error("Failed to request verification:", err);
+      alert("Failed to submit verification request. Please try again later.");
+    }
+  };
+  
+  // Format date function
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy");
+    } catch (err) {
+      return "N/A";
+    }
+  };
+
+  // Get verification status display
+  const getVerificationStatusDisplay = () => {
+    const status = verificationStatus?.status || profileData?.verificationStatus || "unverified";
+    
+    switch (status.toLowerCase()) {
+      case "verified":
+        return <span className="text-green-500 font-medium">Verified</span>;
+      case "pending":
+        return <span className="text-amber-500 font-medium">Pending</span>;
+      case "unverified":
+      default:
+        return <span className="text-amber-500 font-medium">Unverified</span>;
+    }
   };
   
   return (
@@ -239,13 +346,13 @@ function Dashboard() {
             {!sidebarCollapsed && (
               <div className="flex items-center space-x-3 mb-6">
                 <img 
-                  src="https://randomuser.me/api/portraits/men/34.jpg" 
+                  src={profileData?.profileImage || "https://randomuser.me/api/portraits/men/34.jpg"} 
                   alt="User" 
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
-                  <h2 className="font-medium">Jon Deo</h2>
-                  <p className="text-xs text-muted-foreground">Client</p>
+                  <h2 className="font-medium">{profileData?.displayName || "Loading..."}</h2>
+                  <p className="text-xs text-muted-foreground">{profileData?.role?.name || "Client"}</p>
                 </div>
               </div>
             )}
@@ -253,7 +360,7 @@ function Dashboard() {
             {sidebarCollapsed && (
               <div className="flex justify-center mb-6">
                 <img 
-                  src="https://randomuser.me/api/portraits/men/34.jpg" 
+                  src={profileData?.profileImage || "https://randomuser.me/api/portraits/men/34.jpg"} 
                   alt="User" 
                   className="w-10 h-10 rounded-full"
                 />
@@ -280,14 +387,13 @@ function Dashboard() {
                 </Link>
               ))}
               
-              <Link
-                to="/login"
-                className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md transition-colors text-foreground hover:bg-red-500/10 mt-8`}
-                onClick={() => setShowMobileSidebar(false)}
+              <button
+                onClick={handleLogout}
+                className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md transition-colors text-foreground hover:bg-red-500/10 mt-8 w-full text-left`}
               >
                 <span><LogoutIcon /></span>
                 {!sidebarCollapsed && <span>Logout</span>}
-              </Link>
+              </button>
             </nav>
           </div>
         </div>
@@ -302,7 +408,9 @@ function Dashboard() {
               <button className="md:hidden" onClick={toggleMobileSidebar}>
                 <MenuIcon />
               </button>
-              <h2 className="text-lg font-medium">Welcome, Jon Deo</h2>
+              <h2 className="text-lg font-medium">
+                Welcome, {profileData?.displayName || "User"}
+              </h2>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="relative hidden md:block">
@@ -335,132 +443,179 @@ function Dashboard() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background/50">
-          <SettingsTabs />
-
-          {/* User Profile Section */}
-          <Card className="mb-6 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row md:items-center">
-                <div className="relative mb-4 md:mb-0 md:mr-4">
-                  <img 
-                    src="https://randomuser.me/api/portraits/men/34.jpg" 
-                    alt="User" 
-                    className="w-16 h-16 rounded-full"
-                  />
-                </div>
-                <div className="mb-4 md:mb-0">
-                  <h2 className="text-xl font-bold">Welcome, Jon Deo</h2>
-                  <p className="text-muted-foreground text-sm">Looks like you are not verified yet. Verify yourself to use the full potential of enfix.</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-4 mt-4">
-                <Button className={`${themeColor} ${themeColorHover} text-white rounded-full flex items-center`}>
-                  <VerifyIcon className="mr-2" />
-                  Verify account
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+            </div>
+          ) : error ? (
+            <Card className="mb-6 shadow-sm">
+              <CardContent className="p-6">
+                <div className="text-red-500">{error}</div>
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 bg-primary hover:bg-primary/90"
+                >
+                  Retry
                 </Button>
-                <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-full flex items-center">
-                  <TwoFactorIcon className="mr-2" />
-                  Two-factor authentication (2FA)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <SettingsTabs />
 
-          {/* Verification Section */}
-          <Card className="mb-6 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold">Verify & Upgrade</h3>
-              </div>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <span className="font-medium">Account Status : </span>
-                    <span className="text-amber-500 font-medium">Pending</span>
+              {/* User Profile Section */}
+              <Card className="mb-6 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-center">
+                    <div className="relative mb-4 md:mb-0 md:mr-4">
+                      <img 
+                        src={profileData?.profileImage || "https://randomuser.me/api/portraits/men/34.jpg"} 
+                        alt="User" 
+                        className="w-16 h-16 rounded-full"
+                      />
+                    </div>
+                    <div className="mb-4 md:mb-0">
+                      <h2 className="text-xl font-bold">Welcome, {profileData?.displayName}</h2>
+                      <p className="text-muted-foreground text-sm">
+                        {verificationStatus?.status === "verified" 
+                          ? "Your account is verified. Enjoy the full potential of enfix." 
+                          : "Looks like you are not verified yet. Verify yourself to use the full potential of enfix."}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <p className="text-muted-foreground text-sm">Your account is unverified. Get verified to enable funding, trading, and withdrawal.</p>
+                  <div className="flex flex-wrap gap-4 mt-4">
+                    {verificationStatus?.status !== "verified" && (
+                      <Button 
+                        onClick={handleVerifyAccount}
+                        className={`${themeColor} ${themeColorHover} text-white rounded-full flex items-center`}
+                      >
+                        <VerifyIcon className="mr-2" />
+                        Verify account
+                      </Button>
+                    )}
+                    <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-full flex items-center">
+                      <TwoFactorIcon className="mr-2" />
+                      Two-factor authentication (2FA)
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Verification Section */}
+              <Card className="mb-6 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold">Verify & Upgrade</h3>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <span className="font-medium">Account Status : </span>
+                        {getVerificationStatusDisplay()}
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      {verificationStatus?.message || 
+                        (verificationStatus?.status === "verified" 
+                          ? "Your account is verified. You can now access all features." 
+                          : "Your account is unverified. Get verified to enable funding, trading, and withdrawal.")}
+                    </p>
+                  </div>
+                  {verificationStatus?.status !== "verified" && (
+                    <Button 
+                      onClick={handleVerifyAccount}
+                      className="bg-primary hover:bg-primary/90 text-white"
+                    >
+                      Get Verified
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Information Section */}
+              <Card className="mb-6 shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold">Information</h3>
+                    <Button 
+                      variant="outline" 
+                      className="bg-secondary/30 hover:bg-secondary/50 border-none text-primary rounded-md flex items-center"
+                      onClick={() => navigate('/client/profile')}
+                    >
+                      <EditIcon className="mr-2" />
+                      Edit
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">USER ID</h4>
+                      <p className="font-medium">{profileData?.userId || profileData?.id || "N/A"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">EMAIL ADDRESS</h4>
+                      <p className="font-medium">{profileData?.email || "N/A"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">JOINED SINCE</h4>
+                      <p className="font-medium">{formatDate(profileData?.joinedDate)}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">TYPE</h4>
+                      <p className="font-medium">{profileData?.accountType || "Personal"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">COUNTRY OF RESIDENCE</h4>
+                      <p className="font-medium">{profileData?.country || "N/A"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-xs text-muted-foreground uppercase mb-1">PHONE NUMBER</h4>
+                      <p className="font-medium">{profileData?.phoneNumber || "N/A"}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* App Download Section */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold">Download App</h3>
+                    </div>
+                    <div className="mb-6">
+                      <h4 className="text-base font-medium mb-2">Get Verified On Our Mobile App</h4>
+                      <p className="text-muted-foreground text-sm">Verifying your identity on our mobile app more secure, faster, and reliable.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-md flex items-center">
+                        <GooglePlayIcon className="mr-2" />
+                        Google Play
+                      </Button>
+                      <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-md flex items-center">
+                        <AppleStoreIcon className="mr-2" />
+                        App Store
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold">Earn 30% Commission</h3>
+                    </div>
+                    <div className="mb-6">
+                      <p className="text-muted-foreground text-sm">Refer your friends and earn 30% of their trading fees.</p>
+                    </div>
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-white">
+                      Referral Program
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
-              <Button className="bg-primary hover:bg-primary/90 text-white">
-                Get Verified
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Information Section */}
-          <Card className="mb-6 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold">Information</h3>
-                <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-primary rounded-md flex items-center">
-                  <EditIcon className="mr-2" />
-                  Edit
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-xs text-muted-foreground uppercase mb-1">USER ID</h4>
-                  <p className="font-medium">818778</p>
-                </div>
-                <div>
-                  <h4 className="text-xs text-muted-foreground uppercase mb-1">EMAIL ADDRESS</h4>
-                  <p className="font-medium">email@example.com</p>
-                </div>
-                <div>
-                  <h4 className="text-xs text-muted-foreground uppercase mb-1">JOINED SINCE</h4>
-                  <p className="font-medium">20/10/2020</p>
-                </div>
-                <div>
-                  <h4 className="text-xs text-muted-foreground uppercase mb-1">TYPE</h4>
-                  <p className="font-medium">Personal</p>
-                </div>
-                <div>
-                  <h4 className="text-xs text-muted-foreground uppercase mb-1">COUNTRY OF RESIDENCE</h4>
-                  <p className="font-medium">Bangladesh</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* App Download Section */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold">Download App</h3>
-                </div>
-                <div className="mb-6">
-                  <h4 className="text-base font-medium mb-2">Get Verified On Our Mobile App</h4>
-                  <p className="text-muted-foreground text-sm">Verifying your identity on our mobile app more secure, faster, and reliable.</p>
-                </div>
-                <div className="flex gap-4">
-                  <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-md flex items-center">
-                    <GooglePlayIcon className="mr-2" />
-                    Google Play
-                  </Button>
-                  <Button variant="outline" className="bg-secondary/30 hover:bg-secondary/50 border-none text-foreground rounded-md flex items-center">
-                    <AppleStoreIcon className="mr-2" />
-                    App Store
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm">
-              <CardContent className="p-6">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold">Earn 30% Commission</h3>
-                </div>
-                <div className="mb-6">
-                  <p className="text-muted-foreground text-sm">Refer your friends and earn 30% of their trading fees.</p>
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-white">
-                  Referral Program
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+            </>
+          )}
         </main>
       </div>
     </div>

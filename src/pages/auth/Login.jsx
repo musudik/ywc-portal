@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
+import { authApi } from "../../api";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Social media icons
 const FacebookIcon = () => (
@@ -45,11 +47,81 @@ const EnfixLogo = () => (
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
+  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = (e) => {
+  // Get the redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || "/client/dashboard";
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate('/client/dashboard');
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await login(formData);
+      // Redirect based on user role
+      const userRole = response.user.role.name;
+      
+      switch (userRole) {
+        case "CLIENT":
+          navigate("/client/dashboard");
+          break;
+        case "ADMIN":
+          navigate("/admin/dashboard");
+          break;
+        case "COACH":
+          navigate("/coach/dashboard");
+          break;
+        default:
+          navigate("/client/dashboard");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.message || 
+        t("auth.login.errorGeneric")
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!formData.email) {
+      setError(t("auth.login.emailRequired"));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await authApi.forgotPassword({ email: formData.email });
+      alert(t("auth.login.passwordResetSent"));
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      setError(
+        error.response?.data?.message || 
+        t("auth.login.errorPasswordReset")
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -94,6 +166,12 @@ function Login() {
             <LanguageSwitcher />
           </div>
           
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleLogin} className="flex flex-col space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium">
@@ -104,6 +182,9 @@ function Login() {
                 type="email"
                 placeholder={t('auth.login.emailPlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.email}
+                onChange={handleChange}
+                required
               />
             </div>
             
@@ -116,11 +197,18 @@ function Login() {
                 type="password"
                 placeholder={t('auth.login.passwordPlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.password}
+                onChange={handleChange}
+                required
               />
             </div>
             
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-              {t('auth.login.signInButton')}
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90"
+              disabled={isLoading}
+            >
+              {isLoading ? t('common.loading') : t('auth.login.signInButton')}
             </Button>
           </form>
           
@@ -128,7 +216,11 @@ function Login() {
             <Link to="/register" className="text-sm text-primary hover:underline">
               {t('auth.login.noAccount')}
             </Link>
-            <a href="#" className="text-sm text-primary hover:underline">
+            <a 
+              href="#" 
+              className="text-sm text-primary hover:underline"
+              onClick={handleForgotPassword}
+            >
               {t('auth.login.forgotPassword')}
             </a>
           </div>

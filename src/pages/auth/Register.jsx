@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
+import { authApi } from "../../api";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Social media icons
 const FacebookIcon = () => (
@@ -45,6 +47,77 @@ const EnfixLogo = () => (
 
 function Register() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { register } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    displayName: "",
+    phoneNumber: "",
+    roleName: "CLIENT", // Default role
+  });
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const validateForm = () => {
+    if (formData.password !== formData.confirmPassword) {
+      setError(t("auth.register.passwordMismatch"));
+      return false;
+    }
+    
+    // Basic password strength validation
+    if (formData.password.length < 8) {
+      setError(t("auth.register.passwordTooShort"));
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      // Register the user
+      await register({
+        email: formData.email,
+        password: formData.password,
+        displayName: formData.displayName || formData.email.split('@')[0], // Use email username if no display name
+        phoneNumber: formData.phoneNumber,
+        roleName: formData.roleName,
+      });
+      
+      // Show success message
+      alert(t("auth.register.successMessage") || "Registration successful! Please login to continue.");
+      
+      // Redirect to login page
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError(
+        error.response?.data?.message || 
+        t("auth.register.errorGeneric")
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -88,7 +161,27 @@ function Register() {
             <LanguageSwitcher />
           </div>
           
-          <div className="flex flex-col space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="displayName" className="block text-sm font-medium">
+                {t('auth.register.nameLabel')}
+              </label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder={t('auth.register.namePlaceholder')}
+                className="bg-secondary/50 border-none"
+                value={formData.displayName}
+                onChange={handleChange}
+              />
+            </div>
+          
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium">
                 {t('auth.register.emailLabel')}
@@ -98,6 +191,9 @@ function Register() {
                 type="email"
                 placeholder={t('auth.register.emailPlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.email}
+                onChange={handleChange}
+                required
               />
             </div>
             
@@ -110,6 +206,9 @@ function Register() {
                 type="password"
                 placeholder={t('auth.register.passwordPlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.password}
+                onChange={handleChange}
+                required
               />
             </div>
             
@@ -122,23 +221,32 @@ function Register() {
                 type="password"
                 placeholder={t('auth.register.confirmPasswordPlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="phone" className="block text-sm font-medium">
+              <label htmlFor="phoneNumber" className="block text-sm font-medium">
                 {t('auth.register.phoneLabel')}
               </label>
               <Input
-                id="phone"
+                id="phoneNumber"
                 type="tel"
                 placeholder={t('auth.register.phonePlaceholder')}
                 className="bg-secondary/50 border-none"
+                value={formData.phoneNumber}
+                onChange={handleChange}
               />
             </div>
             
-            <Button className="w-full bg-primary hover:bg-primary/90 mt-2">
-              {t('auth.register.signUpButton')}
+            <Button 
+              type="submit"
+              className="w-full bg-primary hover:bg-primary/90 mt-2"
+              disabled={isLoading}
+            >
+              {isLoading ? t('common.loading') : t('auth.register.signUpButton')}
             </Button>
             
             <div className="text-center pt-2">
@@ -146,7 +254,7 @@ function Register() {
                 {t('auth.register.haveAccount')}
               </Link>
             </div>
-          </div>
+          </form>
         </div>
       </Card>
     </div>

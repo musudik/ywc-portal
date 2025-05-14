@@ -61,5 +61,184 @@
     "referralDesc": "Refer your friends and earn 30% of their trading fees.",
     "referralButton": "Referral Program",
     "copyright": "© Copyright enfix | All Rights Reserved"
+  },
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "loading": "Loading...",
+    "select": "Select...",
+    "logout": "Logout",
+    "submit": "Submit",
+    "next": "Next",
+    "previous": "Previous",
+    "required": "Required",
+    "error": "Error"
+  },
+  "profile": {
+    "header": {
+      "title": "Profile Setup"
+    },
+    "progress": {
+      "title": "Profile Setup",
+      "status": "Step {{current}} of {{total}} ({{percentage}}% Complete)"
+    },
+    "saveError": "Failed to save data. Please try again.",
+    "steps": {
+      "personalDetails": "Personal Details",
+      "employment": "Employment",
+      "income": "Income",
+      "expenses": "Expenses",
+      "assets": "Assets",
+      "liabilities": "Liabilities",
+      "goalsAndWishes": "Goals & Wishes",
+      "riskAppetite": "Risk Profile"
+    },
+    "personalDetails": {
+      "title": "Personal Details",
+      "description": "Please provide your personal information.",
+      "coachId": "Coach",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "birthDate": "Date of Birth",
+      "birthPlace": "Place of Birth",
+      "nationality": "Nationality",
+      "maritalStatusLabel": "Marital Status",
+      "maritalStatus": {
+        "single": "Single",
+        "married": "Married",
+        "divorced": "Divorced",
+        "widowed": "Widowed"
+      },
+      "streetAddress": "Street Address",
+      "postalCode": "Postal Code",
+      "city": "City",
+      "housingLabel": "Housing Type",
+      "housing": {
+        "owned": "Owned",
+        "rented": "Rented",
+        "livingWithParents": "Living with Parents",
+        "other": "Other"
+      },
+      "applicantTypeLabel": "Applicant Type",
+      "applicantType": {
+        "primary": "Primary Applicant",
+        "coApplicant": "Co-Applicant"
+      },
+      "saveFailed": "Failed to save personal details. Please try again."
+    },
+    "employment": {
+      "title": "Employment Details",
+      "description": "Please provide your employment information.",
+      "employmentTypeLabel": "Employment Type",
+      "employmentType": {
+        "employed": "Employed",
+        "selfEmployed": "Self-Employed",
+        "unemployed": "Unemployed",
+        "retired": "Retired",
+        "student": "Student"
+      },
+      "occupation": "Occupation",
+      "contractTypeLabel": "Contract Type",
+      "contractType": {
+        "permanent": "Permanent",
+        "temporary": "Temporary",
+        "partTime": "Part-Time",
+        "fullTime": "Full-Time",
+        "freelance": "Freelance",
+        "other": "Other"
+      },
+      "contractDuration": "Contract Duration",
+      "contractDurationPlaceholder": "e.g., 1 year, indefinite",
+      "employerName": "Employer Name",
+      "employedSince": "Start Date",
+      "personalIdMissing": "Personal ID is required but not available. Please complete the personal details step first.",
+      "saveFailed": "Failed to save employment details. Please try again."
+    },
+    "income": {
+      "title": "Income Details",
+      "description": "Please provide your income information.",
+      "grossIncome": "Gross Income (Annual)",
+      "netIncome": "Net Income (Annual)",
+      "taxClass": "Tax Class",
+      "taxId": "Tax ID",
+      "numberOfSalaries": "Number of Salaries per Year",
+      "childBenefit": "Child Benefit",
+      "otherIncome": "Other Income",
+      "incomeTradeBusiness": "Income from Trade/Business",
+      "incomeSelfEmployedWork": "Income from Self-Employed Work",
+      "incomeSideJob": "Income from Side Job"
+    },
+    "expenses": {
+      "title": "Expenses Details",
+      "description": "Please provide your expenses information.",
+      "coldRent": "Cold Rent",
+      "electricity": "Electricity",
+      "livingExpenses": "Living Expenses",
+      "gas": "Gas",
+      "telecommunication": "Telecommunication",
+      "accountMaintenanceFee": "Account Maintenance Fee",
+      "alimony": "Alimony",
+      "subscriptions": "Subscriptions",
+      "otherExpenses": "Other Expenses"
+    },
+    "assets": {
+      "title": "Assets",
+      "description": "Please provide information about your assets.",
+      "realEstate": "Real Estate",
+      "securities": "Securities",
+      "bankDeposits": "Bank Deposits",
+      "buildingSavings": "Building Savings",
+      "insuranceValues": "Insurance Values",
+      "otherAssets": "Other Assets"
+    },
+    "liabilities": {
+      "title": "Liabilities",
+      "description": "Please provide information about your liabilities.",
+      "loanTypeLabel": "Loan Type",
+      "loanType": {
+        "mortgage": "Mortgage",
+        "personal": "Personal",
+        "auto": "Auto",
+        "student": "Student",
+        "other": "Other"
+      },
+      "loanBank": "Loan Bank",
+      "loanAmount": "Loan Amount",
+      "loanMonthlyRate": "Monthly Payment",
+      "loanInterest": "Interest Rate",
+      "addLoan": "Add Loan",
+      "removeLoan": "Remove"
+    },
+    "goalsAndWishes": {
+      "title": "Goals and Wishes",
+      "description": "Please share your financial goals and wishes.",
+      "retirementPlanning": "Retirement Planning",
+      "capitalFormation": "Capital Formation",
+      "realEstateGoals": "Real Estate Goals",
+      "financing": "Financing",
+      "protection": "Protection",
+      "healthcareProvision": "Healthcare Provision",
+      "otherGoals": "Other Goals"
+    },
+    "riskAppetite": {
+      "title": "Risk Profile",
+      "description": "Please provide information about your risk appetite and insurance.",
+      "riskAppetiteLabel": "Risk Appetite",
+      "riskAppetite": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "investmentHorizon": "Investment Horizon",
+      "knowledgeExperience": "Knowledge and Experience",
+      "healthInsurance": "Health Insurance",
+      "healthInsuranceNumber": "Health Insurance Number",
+      "healthInsuranceProof": "Health Insurance Proof"
+    }
   }
 } 

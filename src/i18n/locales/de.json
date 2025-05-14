@@ -61,5 +61,184 @@
     "referralDesc": "Empfehlen Sie Freunde und verdienen Sie 30% ihrer Handelsgebühren.",
     "referralButton": "Empfehlungsprogramm",
     "copyright": "© Copyright enfix | Alle Rechte vorbehalten"
+  },
+  "common": {
+    "continue": "Weiter",
+    "back": "Zurück",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "saving": "Speichern...",
+    "loading": "Laden...",
+    "select": "Auswählen...",
+    "logout": "Abmelden",
+    "submit": "Absenden",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "required": "Erforderlich",
+    "error": "Fehler"
+  },
+  "profile": {
+    "header": {
+      "title": "Profil-Einrichtung"
+    },
+    "progress": {
+      "title": "Profil-Einrichtung",
+      "status": "Schritt {{current}} von {{total}} ({{percentage}}% abgeschlossen)"
+    },
+    "saveError": "Fehler beim Speichern der Daten. Bitte versuchen Sie es erneut.",
+    "steps": {
+      "personalDetails": "Persönliche Daten",
+      "employment": "Beschäftigung",
+      "income": "Einkommen",
+      "expenses": "Ausgaben",
+      "assets": "Vermögenswerte",
+      "liabilities": "Verbindlichkeiten",
+      "goalsAndWishes": "Ziele & Wünsche",
+      "riskAppetite": "Risikoprofil"
+    },
+    "personalDetails": {
+      "title": "Persönliche Daten",
+      "description": "Bitte geben Sie Ihre persönlichen Informationen an.",
+      "coachId": "Coach",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefonnummer",
+      "birthDate": "Geburtsdatum",
+      "birthPlace": "Geburtsort",
+      "nationality": "Nationalität",
+      "maritalStatusLabel": "Familienstand",
+      "maritalStatus": {
+        "single": "Ledig",
+        "married": "Verheiratet",
+        "divorced": "Geschieden",
+        "widowed": "Verwitwet"
+      },
+      "streetAddress": "Straße und Hausnummer",
+      "postalCode": "Postleitzahl",
+      "city": "Stadt",
+      "housingLabel": "Wohnart",
+      "housing": {
+        "owned": "Eigentum",
+        "rented": "Miete",
+        "livingWithParents": "Bei Eltern wohnend",
+        "other": "Sonstiges"
+      },
+      "applicantTypeLabel": "Antragstellertyp",
+      "applicantType": {
+        "primary": "Hauptantragsteller",
+        "coApplicant": "Mitantragsteller"
+      },
+      "saveFailed": "Fehler beim Speichern der persönlichen Daten. Bitte versuchen Sie es erneut."
+    },
+    "employment": {
+      "title": "Beschäftigungsdetails",
+      "description": "Bitte geben Sie Ihre Beschäftigungsinformationen an.",
+      "employmentTypeLabel": "Beschäftigungsart",
+      "employmentType": {
+        "employed": "Angestellt",
+        "selfEmployed": "Selbstständig",
+        "unemployed": "Arbeitslos",
+        "retired": "Im Ruhestand",
+        "student": "Student"
+      },
+      "occupation": "Beruf",
+      "contractTypeLabel": "Vertragsart",
+      "contractType": {
+        "permanent": "Unbefristet",
+        "temporary": "Befristet",
+        "partTime": "Teilzeit",
+        "fullTime": "Vollzeit",
+        "freelance": "Freiberuflich",
+        "other": "Sonstiges"
+      },
+      "contractDuration": "Vertragslaufzeit",
+      "contractDurationPlaceholder": "z.B. 1 Jahr, unbefristet",
+      "employerName": "Arbeitgeber",
+      "employedSince": "Beschäftigt seit",
+      "personalIdMissing": "Persönliche ID ist erforderlich, aber nicht verfügbar. Bitte schließen Sie zuerst den Schritt mit den persönlichen Daten ab.",
+      "saveFailed": "Fehler beim Speichern der Beschäftigungsdetails. Bitte versuchen Sie es erneut."
+    },
+    "income": {
+      "title": "Einkommensdetails",
+      "description": "Bitte geben Sie Ihre Einkommensinformationen an.",
+      "grossIncome": "Bruttoeinkommen (jährlich)",
+      "netIncome": "Nettoeinkommen (jährlich)",
+      "taxClass": "Steuerklasse",
+      "taxId": "Steuer-ID",
+      "numberOfSalaries": "Anzahl der Gehälter pro Jahr",
+      "childBenefit": "Kindergeld",
+      "otherIncome": "Sonstiges Einkommen",
+      "incomeTradeBusiness": "Einkommen aus Handel/Gewerbe",
+      "incomeSelfEmployedWork": "Einkommen aus selbstständiger Arbeit",
+      "incomeSideJob": "Einkommen aus Nebentätigkeit"
+    },
+    "expenses": {
+      "title": "Ausgabendetails",
+      "description": "Bitte geben Sie Ihre Ausgabeninformationen an.",
+      "coldRent": "Kaltmiete",
+      "electricity": "Strom",
+      "livingExpenses": "Lebenshaltungskosten",
+      "gas": "Gas",
+      "telecommunication": "Telekommunikation",
+      "accountMaintenanceFee": "Kontoführungsgebühr",
+      "alimony": "Unterhalt",
+      "subscriptions": "Abonnements",
+      "otherExpenses": "Sonstige Ausgaben"
+    },
+    "assets": {
+      "title": "Vermögenswerte",
+      "description": "Bitte geben Sie Informationen zu Ihren Vermögenswerten an.",
+      "realEstate": "Immobilien",
+      "securities": "Wertpapiere",
+      "bankDeposits": "Bankeinlagen",
+      "buildingSavings": "Bausparverträge",
+      "insuranceValues": "Versicherungswerte",
+      "otherAssets": "Sonstige Vermögenswerte"
+    },
+    "liabilities": {
+      "title": "Verbindlichkeiten",
+      "description": "Bitte geben Sie Informationen zu Ihren Verbindlichkeiten an.",
+      "loanTypeLabel": "Kreditart",
+      "loanType": {
+        "mortgage": "Hypothek",
+        "personal": "Privatkredit",
+        "auto": "Autokredit",
+        "student": "Studentenkredit",
+        "other": "Sonstiges"
+      },
+      "loanBank": "Kreditbank",
+      "loanAmount": "Kreditsumme",
+      "loanMonthlyRate": "Monatliche Rate",
+      "loanInterest": "Zinssatz",
+      "addLoan": "Kredit hinzufügen",
+      "removeLoan": "Entfernen"
+    },
+    "goalsAndWishes": {
+      "title": "Ziele und Wünsche",
+      "description": "Bitte teilen Sie Ihre finanziellen Ziele und Wünsche mit.",
+      "retirementPlanning": "Altersvorsorge",
+      "capitalFormation": "Vermögensbildung",
+      "realEstateGoals": "Immobilienziele",
+      "financing": "Finanzierung",
+      "protection": "Absicherung",
+      "healthcareProvision": "Gesundheitsvorsorge",
+      "otherGoals": "Sonstige Ziele"
+    },
+    "riskAppetite": {
+      "title": "Risikoprofil",
+      "description": "Bitte geben Sie Informationen zu Ihrer Risikobereitschaft und Versicherung an.",
+      "riskAppetiteLabel": "Risikobereitschaft",
+      "riskAppetite": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch"
+      },
+      "investmentHorizon": "Anlagehorizont",
+      "knowledgeExperience": "Kenntnisse und Erfahrungen",
+      "healthInsurance": "Krankenversicherung",
+      "healthInsuranceNumber": "Krankenversicherungsnummer",
+      "healthInsuranceProof": "Krankenversicherungsnachweis"
+    }
   }
 } 

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
 import { useTheme } from "../../components/ui/ThemeProvider";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Icon components
 const SearchIcon = () => (
@@ -142,6 +143,8 @@ const ExpandIcon = () => (
 function AdminDashboard() {
   const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [activeMenuItem, setActiveMenuItem] = useState("dashboard");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -165,6 +168,11 @@ function AdminDashboard() {
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -238,14 +246,13 @@ function AdminDashboard() {
                 </Link>
               ))}
               
-              <Link
-                to="/login"
-                className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md transition-colors text-foreground hover:bg-red-500/10 mt-8`}
-                onClick={() => setShowMobileSidebar(false)}
+              <button
+                onClick={handleLogout}
+                className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-2 rounded-md transition-colors text-foreground hover:bg-red-500/10 mt-8 w-full text-left`}
               >
                 <span><LogoutIcon /></span>
                 {!sidebarCollapsed && <span>Logout</span>}
-              </Link>
+              </button>
             </nav>
           </div>
         </div>
