@@ -142,12 +142,11 @@
               "raw": "{\n\t\"firstName\": \"John\",\n\t\"lastName\": \"Doe\",\n\t\"streetAddress\": \"456 New St\",\n\t\"postalCode\": \"54321\",\n\t\"city\": \"Munich\",\n\t\"phone\": \"+49987654321\",\n\t\"email\": \"john.doe.updated@example.com\",\n\t\"maritalStatus\": \"Married\",\n\t\"housing\": \"Owned\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/business/personal-details/{{personalDetailsId}}",
+              "raw": "{{baseUrl}}/personal-details/{{personalDetailsId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "business",
                 "personal-details",
                 "{{personalDetailsId}}"
               ]

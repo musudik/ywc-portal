@@ -12,7 +12,11 @@ const LanguageSwitcher = () => {
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
   ];
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  // Find the current language or default to first language
+  const getCurrentLanguage = () => {
+    const found = languages.find(lang => lang.code === i18n.language);
+    return found || languages[0];
+  };
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
@@ -33,6 +37,9 @@ const LanguageSwitcher = () => {
     };
   }, []);
 
+  // Get current language safely
+  const currentLang = getCurrentLanguage();
+
   return (
     <div className="relative" ref={dropdownRef}>
       <Button 
@@ -41,8 +48,8 @@ const LanguageSwitcher = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="bg-secondary/30 text-foreground border-none flex items-center gap-2"
       >
-        <span>{currentLanguage.flag}</span>
-        <span className="hidden md:inline">{currentLanguage.name}</span>
+        <span>{currentLang.flag}</span>
+        <span className="hidden md:inline">{currentLang.name}</span>
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           width="16" 

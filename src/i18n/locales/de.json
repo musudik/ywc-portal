@@ -127,7 +127,7 @@
       "applicantTypeLabel": "Antragstellertyp",
       "applicantType": {
         "primary": "Hauptantragsteller",
-        "coApplicant": "Mitantragsteller"
+        "secondary": "Nebenantragsteller"
       },
       "saveFailed": "Fehler beim Speichern der persönlichen Daten. Bitte versuchen Sie es erneut."
     },
@@ -201,11 +201,12 @@
       "description": "Bitte geben Sie Informationen zu Ihren Verbindlichkeiten an.",
       "loanTypeLabel": "Kreditart",
       "loanType": {
-        "mortgage": "Hypothek",
-        "personal": "Privatkredit",
-        "auto": "Autokredit",
-        "student": "Studentenkredit",
-        "other": "Sonstiges"
+        "PersonalLoan": "Privatkredit",
+        "HomeLoan": "Hypothek",
+        "CarLoan": "Autokredit",
+        "BusinessLoan": "Geschäftskredit",
+        "EducationLoan": "Studienkredit",
+        "OtherLoan": "Sonstiges"
       },
       "loanBank": "Kreditbank",
       "loanAmount": "Kreditsumme",
@@ -231,11 +232,24 @@
       "riskAppetiteLabel": "Risikobereitschaft",
       "riskAppetite": {
         "low": "Niedrig",
+        "medium-low": "Mittel-Niedrig",
         "medium": "Mittel",
+        "medium-high": "Mittel-Hoch",
         "high": "Hoch"
       },
-      "investmentHorizon": "Anlagehorizont",
-      "knowledgeExperience": "Kenntnisse und Erfahrungen",
+      "investmentHorizonLabel": "Anlagehorizont",
+      "investmentHorizon": {
+        "short-term": "Kurzfristig",
+        "medium-term": "Mittelfristig",
+        "long-term": "Langfristig"
+      },
+      "knowledgeExperienceLabel": "Kenntnisse und Erfahrungen",
+      "knowledgeExperience": {
+        "none": "Keine",
+        "basic": "Grundlegend",
+        "intermediate": "Mittel",
+        "advanced": "Fortgeschritten"
+      },
       "healthInsurance": "Krankenversicherung",
       "healthInsuranceNumber": "Krankenversicherungsnummer",
       "healthInsuranceProof": "Krankenversicherungsnachweis"

@@ -4,7 +4,7 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
-const ExpensesDetailsForm = ({ onComplete, onBack, personalId }) => {
+const ExpensesDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -22,16 +22,31 @@ const ExpensesDetailsForm = ({ onComplete, onBack, personalId }) => {
   });
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Load initial data if available
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting expenses form data from initialData:", initialData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...initialData,
+        personalId // Ensure personalId is included
+      }));
+      setInitialLoading(false);
+    }
+  }, [initialData, personalId]);
+
+  // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchExpensesDetails = async () => {
-      if (personalId) {
+      if (personalId && !initialData) {
         try {
           const details = await profileApi.getExpensesDetails(personalId);
           if (details) {
+            const expensesData = Array.isArray(details) && details.length > 0 ? details[0] : details;
             setFormData(prevData => ({
               ...prevData,
-              ...details
+              ...expensesData,
+              personalId
             }));
           }
         } catch (err) {
@@ -43,13 +58,13 @@ const ExpensesDetailsForm = ({ onComplete, onBack, personalId }) => {
         } finally {
           setInitialLoading(false);
         }
-      } else {
+      } else if (!initialData) {
         setInitialLoading(false);
       }
     };
 
     fetchExpensesDetails();
-  }, [personalId]);
+  }, [personalId, initialData]);
 
   // Handle input changes
   const handleChange = (e) => {

@@ -54,8 +54,14 @@ const ClientRoute = () => {
     return <div>Loading profile information...</div>;
   }
 
+  // Check if the user is explicitly trying to edit their profile
+  const isEditingProfile = location.search.includes('edit=true');
+
   // If profile is not complete and not already on profile setup page
-  if (profileCompletion && !profileCompletion.isComplete && location.pathname !== '/client/profile') {
+  // Don't redirect if the user is explicitly trying to edit their profile
+  if (profileCompletion && !profileCompletion.isComplete && 
+      location.pathname !== '/client/profile' && 
+      !isEditingProfile) {
     return <Navigate to="/client/profile" replace />;
   }
 

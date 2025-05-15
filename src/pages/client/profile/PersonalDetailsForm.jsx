@@ -6,14 +6,26 @@ import { profileApi } from "../../../api";
 import { ApplicantType } from "../../../api/profile/types";
 import { createSafeTranslate } from "../../../utils/translationUtils";
 
-const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
+// Define constants for dropdown options
+const MARITAL_STATUS_OPTIONS = ["single", "married", "divorced", "widowed"];
+const HOUSING_OPTIONS = ["owned", "rented", "livingWithParents", "other"];
+const APPLICANT_TYPE_OPTIONS = ["PrimaryApplicant", "SecondaryApplicant"];
+
+const PersonalDetailsForm = ({ 
+  onComplete, 
+  initialData, 
+  id, 
+  showUpdateButton, 
+  onUpdate, 
+  profileComplete 
+}) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     coachId: "",
-    applicantType: ApplicantType.PRIMARY_APPLICANT,
+    applicantType: "primary",
     firstName: "",
     lastName: "",
     streetAddress: "",
@@ -28,8 +40,55 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
     housing: "",
     id: id, // Add id from props
   });
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Fetch personal details from API
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting personal details from initialData:", initialData);
+      setFormData(prevData => {
+        // Create a clean data object with all the fields we need
+        const updatedData = {
+          ...prevData,
+          coachId: initialData.coachId || initialData.coach?.id || prevData.coachId || "",
+          firstName: initialData.firstName || prevData.firstName || "",
+          lastName: initialData.lastName || prevData.lastName || "",
+          streetAddress: initialData.streetAddress || prevData.streetAddress || "",
+          postalCode: initialData.postalCode || prevData.postalCode || "",
+          city: initialData.city || prevData.city || "",
+          phone: initialData.phone || prevData.phone || "",
+          email: initialData.email || prevData.email || "",
+          birthPlace: initialData.birthPlace || prevData.birthPlace || "",
+          maritalStatus: initialData.maritalStatus || prevData.maritalStatus || "",
+          nationality: initialData.nationality || prevData.nationality || "",
+          housing: initialData.housing || prevData.housing || "",
+          applicantType: initialData.applicantType || prevData.applicantType || "primary",
+          id: initialData.id || id || prevData.id,
+        };
+        
+        // Handle birthDate separately to ensure proper date formatting
+        if (initialData.birthDate) {
+          try {
+            updatedData.birthDate = new Date(initialData.birthDate).toISOString().split('T')[0];
+          } catch (e) {
+            console.error("Error formatting birthDate:", e);
+            updatedData.birthDate = prevData.birthDate || "";
+          }
+        }
+        
+        // If personalId exists, store it for updates
+        if (initialData.personalId) {
+          updatedData.personalId = initialData.personalId;
+        }
+        
+        console.log("Updated form data from initialData:", updatedData);
+        setInitialLoading(false);
+        return updatedData;
+      });
+    }
+  }, [initialData, id]);
+
+  // Fetch personal details from API if initialData is not provided
   useEffect(() => {
     const fetchPersonalDetails = async () => {
       try {
@@ -56,7 +115,7 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
             // Create a clean data object with all the fields we need
             const updatedData = {
               ...prevData,
-              coachId: personalDetails.coachId || prevData.coachId || "",
+              coachId: personalDetails.coachId || personalDetails.coach || prevData.coachId || "",
               firstName: personalDetails.firstName || prevData.firstName || "",
               lastName: personalDetails.lastName || prevData.lastName || "",
               streetAddress: personalDetails.streetAddress || prevData.streetAddress || "",
@@ -68,7 +127,7 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
               maritalStatus: personalDetails.maritalStatus || prevData.maritalStatus || "",
               nationality: personalDetails.nationality || prevData.nationality || "",
               housing: personalDetails.housing || prevData.housing || "",
-              applicantType: personalDetails.applicantType || prevData.applicantType || ApplicantType.PRIMARY_APPLICANT,
+              applicantType: personalDetails.applicantType || prevData.applicantType || "primary",
               id: personalDetails.id || id || prevData.id,
             };
             
@@ -87,7 +146,7 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
               updatedData.personalId = personalDetails.personalId;
             }
             
-            console.log("Updated form data:", updatedData);
+            console.log("Updated form data from API:", updatedData);
             return updatedData;
           });
         }
@@ -99,6 +158,7 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
         }
       } finally {
         setLoading(false);
+        setInitialLoading(false);
       }
     };
     
@@ -106,27 +166,24 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
     if (!initialData) {
       fetchPersonalDetails();
     }
-  }, [id]);
-
-  // Load initial data if available
-  useEffect(() => {
-    if (initialData) {
-      setFormData(prevData => ({
-        ...prevData,
-        ...initialData,
-        // Convert dates to proper format if they exist
-        birthDate: initialData.birthDate ? new Date(initialData.birthDate).toISOString().split('T')[0] : '',
-      }));
-    }
-  }, [initialData]);
+  }, [id, initialData]);
 
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    
+    // Special handling for coach field
+    if (name === 'coach') {
+      setFormData(prevData => ({
+        ...prevData,
+        coachId: value // Update the coachId field when coach field changes
+      }));
+    } else {
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+      }));
+    }
   };
 
   // Handle form submission
@@ -140,17 +197,19 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
       const dataToSubmit = {
         ...formData,
         // If no coachId is provided, use a default or empty value
-        coachId: formData.coachId || "unassigned",
-        // Ensure id is included
-        id: formData.id || id
+        coach: formData.coachId || "unassigned",
+        // Ensure userId is included
+        userId: formData.id || id
       };
 
       console.log("Submitting personal details:", dataToSubmit);
 
       let response;
-      // Check if we have a personalId from either formData or initialData
-      const personalId = formData.personalId || (initialData?.personalId);
       
+      // First, check if we have a personalId from either formData or initialData
+      const personalId = dataToSubmit.user?.id;
+      
+      console.log("User ID:", personalId);
       if (personalId) {
         console.log(`Updating existing personal details with personalId: ${personalId}`);
         // Update existing personal details
@@ -159,9 +218,40 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
           personalId: personalId
         });
       } else {
-        console.log("Creating new personal details");
-        // Create new personal details
-        response = await profileApi.savePersonalDetails(dataToSubmit);
+        // Check if user exists by userId (which should be available from props)
+        try {
+          console.log("Checking if user exists with userId:", dataToSubmit.userId);
+          const existingUsers = await profileApi.getPersonalDetails();
+          
+          let existingUser = null;
+          if (Array.isArray(existingUsers)) {
+            existingUser = existingUsers.find(user => 
+              user.userId === dataToSubmit.userId || user.email === dataToSubmit.email
+            );
+          } else if (existingUsers && 
+                    (existingUsers.userId === dataToSubmit.userId || 
+                     existingUsers.email === dataToSubmit.email)) {
+            existingUser = existingUsers;
+          }
+          
+          if (existingUser && existingUser.personalId) {
+            console.log(`User already exists with personalId: ${existingUser.personalId}`);
+            // Update existing user
+            response = await profileApi.updatePersonalDetails({
+              ...dataToSubmit,
+              personalId: existingUser.personalId
+            });
+          } else {
+            console.log("Creating new personal details - no existing user found");
+            // Create new personal details
+            response = await profileApi.savePersonalDetails(dataToSubmit);
+          }
+        } catch (checkErr) {
+          console.error("Error checking for existing user:", checkErr);
+          // If check fails, proceed with create
+          console.log("Creating new personal details after failed check");
+          response = await profileApi.savePersonalDetails(dataToSubmit);
+        }
       }
 
       console.log("Personal details saved successfully:", response);
@@ -196,13 +286,35 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+
           <div className="space-y-2">
-            <label htmlFor="coachId" className="block text-sm font-medium">
+            <label htmlFor="applicantType" className="block text-sm font-medium">
+              {safeTranslate('profile.personalDetails.applicantTypeLabel')} *
+            </label>
+            <select
+              id="applicantType"
+              name="applicantType"
+              value={formData.applicantType}
+              onChange={handleChange}
+              className="w-full rounded-md border border-input bg-background px-3 py-2"
+              required
+            >
+              {APPLICANT_TYPE_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {safeTranslate(`profile.personalDetails.applicantType.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="coach" className="block text-sm font-medium">
               {safeTranslate('profile.personalDetails.coachId')} *
             </label>
             <Input
-              id="coachId"
-              name="coachId"
+              id="coach"
+              name="coach"
               value={formData.coachId}
               onChange={handleChange}
               required
@@ -270,7 +382,7 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
               id="birthDate"
               name="birthDate"
               type="date"
-              value={formData.birthDate || ''}
+              value={formData.birthDate}
               onChange={handleChange}
               required
             />
@@ -314,11 +426,12 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               required
             >
-              <option value="">{safeTranslate('common.select')}</option>
-              <option value="Single">{safeTranslate('profile.personalDetails.maritalStatus.single')}</option>
-              <option value="Married">{safeTranslate('profile.personalDetails.maritalStatus.married')}</option>
-              <option value="Divorced">{safeTranslate('profile.personalDetails.maritalStatus.divorced')}</option>
-              <option value="Widowed">{safeTranslate('profile.personalDetails.maritalStatus.widowed')}</option>
+              <option value="">{safeTranslate('common.select', 'Select...')}</option>
+              {MARITAL_STATUS_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {safeTranslate(`profile.personalDetails.maritalStatus.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -373,41 +486,51 @@ const PersonalDetailsForm = ({ onComplete, initialData, id }) => {
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               required
             >
-              <option value="">{safeTranslate('common.select')}</option>
-              <option value="Owned">{safeTranslate('profile.personalDetails.housing.owned')}</option>
-              <option value="Rented">{safeTranslate('profile.personalDetails.housing.rented')}</option>
-              <option value="LivingWithParents">{safeTranslate('profile.personalDetails.housing.livingWithParents')}</option>
-              <option value="Other">{safeTranslate('profile.personalDetails.housing.other')}</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="applicantType" className="block text-sm font-medium">
-              {safeTranslate('profile.personalDetails.applicantTypeLabel')} *
-            </label>
-            <select
-              id="applicantType"
-              name="applicantType"
-              value={formData.applicantType}
-              onChange={handleChange}
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
-              required
-            >
-              <option value={ApplicantType.PRIMARY_APPLICANT}>{safeTranslate('profile.personalDetails.applicantType.primary')}</option>
-              <option value={ApplicantType.CO_APPLICANT}>{safeTranslate('profile.personalDetails.applicantType.coApplicant')}</option>
+              <option value="">{safeTranslate('common.select', 'Select...')}</option>
+              {HOUSING_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {safeTranslate(`profile.personalDetails.housing.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+                </option>
+              ))}
             </select>
           </div>
         </div>
       )}
 
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button
-          type="submit"
-          className="bg-green-600 hover:bg-green-700 text-white"
-          disabled={loading}
-        >
-          {loading ? safeTranslate('common.saving') : safeTranslate('common.continue')}
-        </Button>
+      <div className="flex justify-end pt-4">
+        {profileComplete ? (
+          <Button 
+            type="button"
+            onClick={onUpdate}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t('common.updating', 'Updating...')}
+              </span>
+            ) : t('common.update', 'Update')}
+          </Button>
+        ) : (
+          <Button 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t('common.saving', 'Saving...')}
+              </span>
+            ) : t('common.next', 'Next')}
+          </Button>
+        )}
       </div>
     </form>
   );

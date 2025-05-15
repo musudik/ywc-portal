@@ -3,17 +3,51 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
-import { EmploymentType } from "../../../api/profile/types";
 import { createSafeTranslate } from "../../../utils/translationUtils";
 
-const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
+// Define constants for dropdown options
+const EMPLOYMENT_TYPE_OPTIONS = ["employed", "selfEmployed", "unemployed", "retired", "student"];
+const CONTRACT_TYPE_OPTIONS = ["permanent", "temporary", "partTime", "fullTime", "freelance", "other"];
+
+// Map backend values to form values
+const mapBackendToFormValues = (backendData) => {
+  if (!backendData) return null;
+  
+  const formData = {...backendData};
+  
+  // Map employment type
+  if (formData.employmentType === "PrimaryEmployment") {
+    formData.employmentType = "employed";
+  }
+  
+  // Map contract type - capitalize first letter for display
+  if (formData.contractType && typeof formData.contractType === 'string') {
+    formData.contractType = formData.contractType.toLowerCase();
+  }
+  
+  return formData;
+};
+
+// Map form values back to backend expected values
+const mapFormToBackendValues = (formData) => {
+  const backendData = {...formData};
+  
+  // Map employment type
+  if (backendData.employmentType === "employed") {
+    backendData.employmentType = "PrimaryEmployment";
+  }
+  
+  return backendData;
+};
+
+const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     personalId: personalId,
-    employmentType: EmploymentType.EMPLOYED,
+    employmentType: "employed",
     occupation: "",
     contractType: "",
     contractDuration: "",
@@ -22,16 +56,34 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
   });
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Load initial data if available
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting form data from initialData:", initialData);
+      const mappedData = mapBackendToFormValues(initialData);
+      console.log("Mapped initial data for form:", mappedData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...mappedData,
+        personalId // Ensure personalId is included
+      }));
+      setInitialLoading(false);
+    }
+  }, [initialData, personalId]);
+
+  // Load initial data if available and if initialData prop is not provided
   useEffect(() => {
     const fetchEmploymentDetails = async () => {
-      if (personalId) {
+      if (personalId && !initialData) {
         try {
           const details = await profileApi.getEmploymentDetails(personalId);
           if (details) {
+            const employmentData = Array.isArray(details) && details.length > 0 ? details[0] : details;
+            const mappedData = mapBackendToFormValues(employmentData);
+            console.log("Mapped employment data for form:", mappedData);
             setFormData(prevData => ({
               ...prevData,
-              ...details,
+              ...mappedData,
               personalId // Ensure personalId is included
             }));
           }
@@ -44,7 +96,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
         } finally {
           setInitialLoading(false);
         }
-      } else {
+      } else if (!initialData) {
         setInitialLoading(false);
       }
     };
@@ -62,14 +114,17 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
       }));
       
       // If we now have a personalId and we're not in initial loading, try to fetch employment details again
-      if (!initialLoading) {
+      if (!initialLoading && !initialData) {
         const fetchEmploymentDetails = async () => {
           try {
             const details = await profileApi.getEmploymentDetails(personalId);
             if (details) {
+              const employmentData = Array.isArray(details) && details.length > 0 ? details[0] : details;
+              const mappedData = mapBackendToFormValues(employmentData);
+              console.log("Mapped employment data on personalId update:", mappedData);
               setFormData(prevData => ({
                 ...prevData,
-                ...details,
+                ...mappedData,
                 personalId // Ensure personalId is included
               }));
             }
@@ -88,7 +143,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
       // Even if personalId is missing, we should still initialize the form
       setInitialLoading(false);
     }
-  }, [personalId, initialLoading]);
+  }, [personalId, initialLoading, initialData]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -106,7 +161,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
       ...prevData,
       employmentType: value,
       // Reset employment-specific fields when changing type
-      ...(value !== EmploymentType.EMPLOYED && {
+      ...(value !== "employed" && {
         employerName: "",
         contractType: "",
         contractDuration: "",
@@ -126,11 +181,14 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
         throw new Error(safeTranslate('profile.employment.personalIdMissing', 'Personal ID is required but not available'));
       }
 
-      // Prepare data for submission
-      const dataToSubmit = {
+      // Prepare data for submission - map form values back to what backend expects
+      const dataToSubmit = mapFormToBackendValues({
         ...formData,
         personalId
-      };
+      });
+      
+      console.log("Original form data:", formData);
+      console.log("Mapped data for backend submission:", dataToSubmit);
 
       console.log("Submitting employment details:", dataToSubmit);
 
@@ -196,11 +254,11 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
             className="w-full rounded-md border border-input bg-background px-3 py-2"
             required
           >
-            <option value={EmploymentType.EMPLOYED}>{safeTranslate('profile.employment.employmentType.employed', 'Employed')}</option>
-            <option value={EmploymentType.SELF_EMPLOYED}>{safeTranslate('profile.employment.employmentType.selfEmployed', 'Self-Employed')}</option>
-            <option value={EmploymentType.UNEMPLOYED}>{safeTranslate('profile.employment.employmentType.unemployed', 'Unemployed')}</option>
-            <option value={EmploymentType.RETIRED}>{safeTranslate('profile.employment.employmentType.retired', 'Retired')}</option>
-            <option value={EmploymentType.STUDENT}>{safeTranslate('profile.employment.employmentType.student', 'Student')}</option>
+            {EMPLOYMENT_TYPE_OPTIONS.map(option => (
+              <option key={option} value={option}>
+                {safeTranslate(`profile.employment.employmentType.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -217,7 +275,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
           />
         </div>
 
-        {formData.employmentType === EmploymentType.EMPLOYED && (
+        {formData.employmentType === "employed" && (
           <>
             <div className="space-y-2">
               <label htmlFor="employerName" className="block text-sm font-medium">
@@ -228,7 +286,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
                 name="employerName"
                 value={formData.employerName}
                 onChange={handleChange}
-                required={formData.employmentType === EmploymentType.EMPLOYED}
+                required={formData.employmentType === "employed"}
               />
             </div>
 
@@ -242,13 +300,14 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
                 value={formData.contractType}
                 onChange={handleChange}
                 className="w-full rounded-md border border-input bg-background px-3 py-2"
-                required={formData.employmentType === EmploymentType.EMPLOYED}
+                required={formData.employmentType === "employed"}
               >
                 <option value="">{safeTranslate('common.select', 'Select...')}</option>
-                <option value="Permanent">{safeTranslate('profile.employment.contractType.permanent', 'Permanent')}</option>
-                <option value="Temporary">{safeTranslate('profile.employment.contractType.temporary', 'Temporary')}</option>
-                <option value="PartTime">{safeTranslate('profile.employment.contractType.partTime', 'Part-Time')}</option>
-                <option value="FullTime">{safeTranslate('profile.employment.contractType.fullTime', 'Full-Time')}</option>
+                {CONTRACT_TYPE_OPTIONS.map(option => (
+                  <option key={option} value={option}>
+                    {safeTranslate(`profile.employment.contractType.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -264,22 +323,22 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
                 placeholder={safeTranslate('profile.employment.contractDurationPlaceholder', 'e.g., 1 year, indefinite')}
               />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="employedSince" className="block text-sm font-medium">
+                {safeTranslate('profile.employment.employedSince', 'Employed Since')} *
+              </label>
+              <Input
+                id="employedSince"
+                name="employedSince"
+                type="date"
+                value={formData.employedSince}
+                onChange={handleChange}
+                required={formData.employmentType === "employed"}
+              />
+            </div>
           </>
         )}
-
-        <div className="space-y-2">
-          <label htmlFor="employedSince" className="block text-sm font-medium">
-            {safeTranslate('profile.employment.employedSince', 'Start Date')} *
-          </label>
-          <Input
-            id="employedSince"
-            name="employedSince"
-            type="date"
-            value={formData.employedSince ? new Date(formData.employedSince).toISOString().split('T')[0] : ''}
-            onChange={handleChange}
-            required
-          />
-        </div>
       </div>
 
       <div className="flex justify-between pt-4">
@@ -293,7 +352,7 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId }) => {
         </Button>
         <Button 
           type="submit" 
-          disabled={loading || !personalId}
+          disabled={loading}
         >
           {loading ? (
             <span className="flex items-center">

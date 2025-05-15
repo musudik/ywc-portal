@@ -94,7 +94,10 @@
       "assets": "Assets",
       "liabilities": "Liabilities",
       "goalsAndWishes": "Goals & Wishes",
-      "riskAppetite": "Risk Profile"
+      "riskAppetite": "Risk Profile",
+      "step": "Step",
+      "of": "of",
+      "complete": "Complete"
     },
     "personalDetails": {
       "title": "Personal Details",
@@ -127,7 +130,7 @@
       "applicantTypeLabel": "Applicant Type",
       "applicantType": {
         "primary": "Primary Applicant",
-        "coApplicant": "Co-Applicant"
+        "secondary": "Secondary Applicant"
       },
       "saveFailed": "Failed to save personal details. Please try again."
     },
@@ -201,11 +204,12 @@
       "description": "Please provide information about your liabilities.",
       "loanTypeLabel": "Loan Type",
       "loanType": {
-        "mortgage": "Mortgage",
-        "personal": "Personal",
-        "auto": "Auto",
-        "student": "Student",
-        "other": "Other"
+        "PersonalLoan": "Personal Loan",
+        "HomeLoan": "Home Loan / Mortgage",
+        "CarLoan": "Car Loan",
+        "BusinessLoan": "Business Loan",
+        "EducationLoan": "Education Loan",
+        "OtherLoan": "Other Loan"
       },
       "loanBank": "Loan Bank",
       "loanAmount": "Loan Amount",
@@ -231,11 +235,24 @@
       "riskAppetiteLabel": "Risk Appetite",
       "riskAppetite": {
         "low": "Low",
+        "medium-low": "Medium-Low",
         "medium": "Medium",
+        "medium-high": "Medium-High",
         "high": "High"
       },
-      "investmentHorizon": "Investment Horizon",
-      "knowledgeExperience": "Knowledge and Experience",
+      "investmentHorizonLabel": "Investment Horizon",
+      "investmentHorizon": {
+        "short-term": "Short-Term",
+        "medium-term": "Medium-Term",
+        "long-term": "Long-Term"
+      },
+      "knowledgeExperienceLabel": "Knowledge and Experience",
+      "knowledgeExperience": {
+        "none": "None",
+        "basic": "Basic",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
       "healthInsurance": "Health Insurance",
       "healthInsuranceNumber": "Health Insurance Number",
       "healthInsuranceProof": "Health Insurance Proof"

@@ -13,16 +13,17 @@ export enum EmploymentType {
 }
 
 export enum LoanType {
-  MORTGAGE = 'MORTGAGE',
-  PERSONAL = 'PERSONAL',
-  AUTO = 'AUTO',
-  STUDENT = 'STUDENT',
-  OTHER = 'OTHER'
-}
+  PersonalLoan = 'PersonalLoan',
+  HomeLoan = 'HomeLoan',
+  CarLoan = 'CarLoan',
+  BusinessLoan = 'BusinessLoan',
+  EducationLoan = 'EducationLoan',
+  OtherLoan = 'OtherLoan'
+};
 
 // Personal Details
 export interface PersonalDetailsInput {
-  personalId?: string;
+  id?: string;
   userId: string;
   coachId: string;
   applicantType: ApplicantType;

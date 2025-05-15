@@ -4,7 +4,20 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
-const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
+// Define constants for dropdown options based on provided values
+const RISK_APPETITE_OPTIONS = ["low", "medium-low", "medium", "medium-high", "high"];
+const INVESTMENT_HORIZON_OPTIONS = ["short-term", "medium-term", "long-term"];
+const KNOWLEDGE_EXPERIENCE_OPTIONS = ["none", "basic", "intermediate", "advanced"];
+
+const RiskAppetiteForm = ({ 
+  onComplete, 
+  onBack, 
+  personalId, 
+  initialData, 
+  showUpdateButton, 
+  onUpdate, 
+  profileComplete 
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,20 +28,35 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
     knowledgeExperience: "",
     healthInsurance: "",
     healthInsuranceNumber: "",
-    healthInsuranceProof: ""
+    healthInsuranceProof: "",
+    riskAppetiteId: null
   });
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Load initial data if available
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting risk appetite form data from initialData:", initialData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...initialData,
+        personalId // Ensure personalId is included
+      }));
+      setInitialLoading(false);
+    }
+  }, [initialData, personalId]);
+
+  // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchRiskAppetite = async () => {
-      if (personalId) {
+      if (personalId && !initialData) {
         try {
           const details = await profileApi.getRiskAppetite(personalId);
           if (details) {
             setFormData(prevData => ({
               ...prevData,
-              ...details
+              ...details,
+              personalId
             }));
           }
         } catch (err) {
@@ -40,21 +68,28 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
         } finally {
           setInitialLoading(false);
         }
-      } else {
+      } else if (!initialData) {
         setInitialLoading(false);
       }
     };
 
     fetchRiskAppetite();
-  }, [personalId]);
+  }, [personalId, initialData]);
 
   // Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    const { name, value, type, files } = e.target;
+    if (type === "file") {
+      setFormData(prev => ({
+        ...prev,
+        [name]: files[0] // Store the file object
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Handle form submission
@@ -118,7 +153,7 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
           
           <div className="space-y-2">
             <label htmlFor="riskAppetite" className="block text-sm font-medium">
-              {t('profile.riskAppetite.riskAppetite', 'Risk Appetite')} *
+              {t('profile.riskAppetite.riskAppetiteLabel', 'Risk Appetite')} *
             </label>
             <select
               id="riskAppetite"
@@ -129,16 +164,17 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
               required
             >
               <option value="">{t('common.select', 'Select...')}</option>
-              <option value="conservative">{t('profile.riskAppetite.riskAppetite.conservative', 'Conservative - I prefer safe investments with stable returns')}</option>
-              <option value="moderate">{t('profile.riskAppetite.riskAppetite.moderate', 'Moderate - I can accept some risk for potentially higher returns')}</option>
-              <option value="aggressive">{t('profile.riskAppetite.riskAppetite.aggressive', 'Aggressive - I am comfortable with higher risk for potentially higher returns')}</option>
-              <option value="very_aggressive">{t('profile.riskAppetite.riskAppetite.very_aggressive', 'Very Aggressive - I seek maximum returns and can accept significant volatility')}</option>
+              {RISK_APPETITE_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {t(`profile.riskAppetite.riskAppetite.${option.replace('-', '_')}`, option.charAt(0).toUpperCase() + option.slice(1).replace('-', ' '))}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="space-y-2">
             <label htmlFor="investmentHorizon" className="block text-sm font-medium">
-              {t('profile.riskAppetite.investmentHorizon', 'Investment Horizon')} *
+              {t('profile.riskAppetite.investmentHorizonLabel', 'Investment Horizon')} *
             </label>
             <select
               id="investmentHorizon"
@@ -149,15 +185,17 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
               required
             >
               <option value="">{t('common.select', 'Select...')}</option>
-              <option value="short_term">{t('profile.riskAppetite.investmentHorizon.short_term', 'Short-term (1-3 years)')}</option>
-              <option value="medium_term">{t('profile.riskAppetite.investmentHorizon.medium_term', 'Medium-term (4-7 years)')}</option>
-              <option value="long_term">{t('profile.riskAppetite.investmentHorizon.long_term', 'Long-term (8+ years)')}</option>
+              {INVESTMENT_HORIZON_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {t(`profile.riskAppetite.investmentHorizon.${option.replace('-', '_')}`, option.charAt(0).toUpperCase() + option.slice(1).replace('-', ' '))}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="space-y-2">
             <label htmlFor="knowledgeExperience" className="block text-sm font-medium">
-              {t('profile.riskAppetite.knowledgeExperience', 'Investment Knowledge & Experience')} *
+              {t('profile.riskAppetite.knowledgeExperienceLabel', 'Investment Knowledge & Experience')} *
             </label>
             <select
               id="knowledgeExperience"
@@ -168,10 +206,11 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
               required
             >
               <option value="">{t('common.select', 'Select...')}</option>
-              <option value="beginner">{t('profile.riskAppetite.knowledgeExperience.beginner', 'Beginner - Limited knowledge and experience')}</option>
-              <option value="intermediate">{t('profile.riskAppetite.knowledgeExperience.intermediate', 'Intermediate - Some knowledge and experience')}</option>
-              <option value="advanced">{t('profile.riskAppetite.knowledgeExperience.advanced', 'Advanced - Extensive knowledge and experience')}</option>
-              <option value="expert">{t('profile.riskAppetite.knowledgeExperience.expert', 'Expert - Professional knowledge and experience')}</option>
+              {KNOWLEDGE_EXPERIENCE_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {t(`profile.riskAppetite.knowledgeExperience.${option}`, option.charAt(0).toUpperCase() + option.slice(1))}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -232,20 +271,41 @@ const RiskAppetiteForm = ({ onComplete, onBack, personalId }) => {
         >
           {t('common.back', 'Back')}
         </Button>
-        <Button 
-          type="submit" 
-          disabled={loading}
-        >
-          {loading ? (
-            <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {t('common.saving', 'Saving...')}
-            </span>
-          ) : t('common.finish', 'Finish')}
-        </Button>
+        
+        {/* Conditionally render the appropriate button */}
+        {profileComplete ? (
+          <Button 
+            type="button"
+            onClick={onUpdate}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t('common.updating', 'Updating...')}
+              </span>
+            ) : t('common.update', 'Update')}
+          </Button>
+        ) : (
+          <Button 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t('common.saving', 'Saving...')}
+              </span>
+            ) : t('common.finish', 'Finish')}
+          </Button>
+        )}
       </div>
     </form>
   );

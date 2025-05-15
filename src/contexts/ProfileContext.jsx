@@ -142,7 +142,9 @@ export const ProfileProvider = ({ children }) => {
     if (!sections.goalsAndWishes) return 6;
     if (!sections.riskAppetite) return 7;
     
-    return 8; // All steps complete
+    // If all steps are complete, return 7 (last step) instead of 8
+    // This ensures we show a valid step even when all sections are completed
+    return 7;
   };
 
   // Context value

@@ -144,13 +144,13 @@ export const profileApi = {
     return response.data;
   },
 
-  updatePersonalDetails: async (data: PersonalDetailsInput): Promise<PersonalDetailsInput> => {
-    console.log(`Updating personal details with personalId: ${data.personalId}`, data);
-    if (!data.personalId) {
+  updatePersonalDetails: async (data: any): Promise<PersonalDetailsInput> => {
+    console.log(`Updating personal details with personalId: ${data.id}`, data);
+    if (!data.id) {
       console.error("Missing personalId for update operation");
       throw new Error("personalId is required for updating personal details");
     }
-    const response = await businessApi.put(`/personal-details/${data.personalId}`, data);
+    const response = await businessApi.put(`/personal-details/${data.id}`, data);
     console.log("Update personal details response:", response.data);
     return response.data;
   },

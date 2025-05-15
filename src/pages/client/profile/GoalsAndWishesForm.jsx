@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { profileApi } from "../../../api";
 
-const GoalsAndWishesForm = ({ onComplete, onBack, personalId }) => {
+const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,16 +19,30 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId }) => {
   });
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Load initial data if available
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("Setting form data from initialData:", initialData);
+      setFormData(prevData => ({
+        ...prevData,
+        ...initialData,
+        personalId // Ensure personalId is included
+      }));
+      setInitialLoading(false);
+    }
+  }, [initialData, personalId]);
+
+  // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchGoalsAndWishes = async () => {
-      if (personalId) {
+      if (personalId && !initialData) {
         try {
           const details = await profileApi.getGoalsAndWishes(personalId);
           if (details) {
             setFormData(prevData => ({
               ...prevData,
-              ...details
+              ...details,
+              personalId
             }));
           }
         } catch (err) {
@@ -40,12 +54,22 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId }) => {
         } finally {
           setInitialLoading(false);
         }
-      } else {
+      } else if (!initialData) {
         setInitialLoading(false);
       }
     };
 
     fetchGoalsAndWishes();
+  }, [personalId, initialData]);
+  
+  // Update personalId in formData if it changes
+  useEffect(() => {
+    if (personalId) {
+      setFormData(prevData => ({
+        ...prevData,
+        personalId
+      }));
+    }
   }, [personalId]);
 
   // Handle input changes
