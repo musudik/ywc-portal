@@ -12,3 +12,12 @@ Code Style and Structure:
 - The directory structure of react native projects should always have the following
 - `components` this directory contains all the components that can be reused in the project. Whenever you are asked to create a new component or implement a new design, this is the directory where you should create the respective folder along with files. for example
 ```
+
+### Client Details Loading
+- Always check if the api call completion-status and check for "isComplete" in the response
+- if "isComplete" == true then enter the Profile with "UPDATE" mode.
+- if "isComplete" == false then enter the Profile with "CREATE" mode.
+- In "CREATE" mode the stepwise flow is mandatory as defined, the navigation of steps is via "NEXT" and "BACK" button
+- In "CREATE" use the POST methods to persists the data.
+- In "CREATE" when "BACK" button is pressed, get the information from the backend to populate the previous section or page.
+- Make sure the field wise validations are set and highlight the border if not entered when required.

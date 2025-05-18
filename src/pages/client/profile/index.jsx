@@ -42,6 +42,9 @@ const StepProgress = ({ currentStep, totalSteps, sections, completionPercentage,
   
   // Calculate step display value - handle edge case for display
   const currentStepDisplay = currentStep >= totalSteps ? totalSteps : (safeCurrentStep + 1);
+  
+  // Check for edit mode
+  const isEditMode = window.location.search.includes('edit=true');
 
   return (
     <div className="mb-8">
@@ -59,7 +62,8 @@ const StepProgress = ({ currentStep, totalSteps, sections, completionPercentage,
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
         {steps.map((step, index) => {
-          const isCompleted = index < safeCurrentStep;
+          // In edit mode, consider steps completed if they have data or are before current step
+          const isCompleted = isEditMode || index < safeCurrentStep || sections?.[step.key];
           const isCurrent = index === safeCurrentStep;
           const hasData = sections?.[step.key];
           
@@ -67,30 +71,12 @@ const StepProgress = ({ currentStep, totalSteps, sections, completionPercentage,
             <button 
               key={step.key} 
               onClick={() => onStepClick(index)}
-              disabled={!hasData && !isCompleted && !isCurrent}
               className={`
                 py-3 px-2 rounded-md text-center transition-all duration-200 flex flex-col items-center justify-center
-                ${isCompleted 
-                  ? 'bg-green-600 text-white hover:bg-green-700 cursor-pointer' 
-                  : isCurrent 
-                    ? 'bg-green-500/20 border-2 border-green-500 text-green-700 dark:text-green-400 font-semibold' 
-                    : hasData 
-                      ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-pointer' 
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                }
+                bg-green-600 text-white hover:bg-green-700 cursor-pointer
               `}
             >
               <span className="text-sm font-medium">{step.label}</span>
-              {(isCompleted || hasData) && (
-                <span className="text-xs mt-1 inline-flex items-center">
-                  {isCompleted ? 'Completed' : 'Available'}
-                  {isCompleted && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </span>
-              )}
             </button>
           );
         })}
@@ -323,7 +309,18 @@ const ProfileSetup = () => {
 
   // Handler for clicking on a step in the progress bar
   const handleStepClick = (stepIndex) => {
-    // Only allow clicking on completed steps or the current step
+    // Check if we're in edit mode
+    const isEditMode = window.location.search.includes('edit=true');
+    
+    // In edit mode, always allow clicking on any step without additional conditions
+    if (isEditMode) {
+      setSelectedStep(stepIndex);
+      setCurrentStep(stepIndex);
+      setShowUpdateButton(true);
+      return;
+    }
+    
+    // For non-edit mode, only allow clicking on completed steps or the current step
     const currentStepFromContext = getCurrentStep();
     if (stepIndex <= currentStepFromContext || profileCompletion?.[Object.keys(profileCompletion)[stepIndex]]) {
       setSelectedStep(stepIndex);
@@ -499,12 +496,13 @@ const ProfileSetup = () => {
       const nextStep = getCurrentStep();
       
       if (nextStep >= totalSteps) {
-        // All steps complete, redirect to dashboard if not in edit mode
+        // All steps complete
         if (!isEditMode) {
+          // Redirect to dashboard only if not in edit mode
           navigate("/client/dashboard");
         } else {
-          // If in edit mode and finished all steps, stay on the last step
-          setCurrentStep(totalSteps - 1);
+          // In edit mode, don't redirect, go to the first step to allow editing all sections
+          setCurrentStep(0);
         }
       } else {
         setCurrentStep(nextStep);
@@ -560,6 +558,9 @@ const ProfileSetup = () => {
       );
     }
     
+    // Check if we're in edit mode
+    const isEditMode = window.location.search.includes('edit=true');
+    
     // Get form components with adjusted props to handle the button logic
     switch (currentStep) {
       case 0:
@@ -567,9 +568,10 @@ const ProfileSetup = () => {
           onComplete={handleNextStep} 
           initialData={personalDetails} 
           id={user?.id}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 1:
         return <EmploymentDetailsForm 
@@ -577,9 +579,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId || ''}
           initialData={employmentDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 2:
         return <IncomeDetailsForm 
@@ -587,9 +590,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={incomeDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 3:
         return <ExpensesDetailsForm 
@@ -597,9 +601,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={expensesDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 4:
         return <AssetsForm 
@@ -607,9 +612,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={assetsDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 5:
         return <LiabilitiesForm 
@@ -617,9 +623,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={liabilitiesDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 6:
         return <GoalsAndWishesForm 
@@ -627,9 +634,10 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={goalsAndWishesDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       case 7:
         return <RiskAppetiteForm 
@@ -637,18 +645,20 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={riskAppetiteDetails}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
       default:
         return <PersonalDetailsForm 
           onComplete={handleNextStep} 
           initialData={personalDetails} 
           id={user?.id}
-          showUpdateButton={showUpdateButton}
+          showUpdateButton={showUpdateButton || isEditMode}
           onUpdate={handleUpdate}
           profileComplete={profileCompletion?.isComplete}
+          isEditMode={isEditMode}
         />;
     }
   };
@@ -658,21 +668,29 @@ const ProfileSetup = () => {
     <DashboardLayout>
       <div className="container max-w-5xl mx-auto">
         <div className="space-y-8">
-          {profileCompletion?.personalDetails && currentStep >= totalSteps ? (
-            // Show section menu for completed profiles
+          {/* Always show section menu in edit mode */}
+          {window.location.search.includes('edit=true') ? (
+            // Show section menu for edit mode
             <ProfileSectionMenu 
               currentStep={currentStep} 
               setCurrentStep={setCurrentStep} 
             />
           ) : (
-            // Show progress bar for incomplete profiles
-            <StepProgress 
-              currentStep={currentStep} 
-              totalSteps={totalSteps} 
-              sections={profileCompletion}
-              completionPercentage={profileCompletion?.completionPercentage}
-              onStepClick={handleStepClick}
-            />
+            // For non-edit mode, show section menu for completed profiles, otherwise show progress bar
+            profileCompletion?.personalDetails && currentStep >= totalSteps ? (
+              <ProfileSectionMenu 
+                currentStep={currentStep} 
+                setCurrentStep={setCurrentStep} 
+              />
+            ) : (
+              <StepProgress 
+                currentStep={currentStep} 
+                totalSteps={totalSteps} 
+                sections={profileCompletion}
+                completionPercentage={profileCompletion?.completionPercentage}
+                onStepClick={handleStepClick}
+              />
+            )
           )}
 
           {/* Content area with improved padding */}

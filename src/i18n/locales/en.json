@@ -75,7 +75,12 @@
     "next": "Next",
     "previous": "Previous",
     "required": "Required",
-    "error": "Error"
+    "error": "Error",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "update": "Update",
+    "actions": "Actions"
   },
   "profile": {
     "header": {
@@ -204,6 +209,12 @@
       "description": "Please provide information about your liabilities.",
       "loanTypeLabel": "Loan Type",
       "loanType": {
+        "personal": "Personal Loan",
+        "home": "Home Loan / Mortgage",
+        "car": "Car Loan",
+        "business": "Business Loan",
+        "education": "Education Loan",
+        "other": "Other Loan",
         "PersonalLoan": "Personal Loan",
         "HomeLoan": "Home Loan / Mortgage",
         "CarLoan": "Car Loan",
@@ -216,7 +227,10 @@
       "loanMonthlyRate": "Monthly Payment",
       "loanInterest": "Interest Rate",
       "addLoan": "Add Loan",
-      "removeLoan": "Remove"
+      "removeLoan": "Remove",
+      "editLoan": "Edit Loan",
+      "existingLoans": "Your Existing Loans",
+      "total": "Total"
     },
     "goalsAndWishes": {
       "title": "Goals and Wishes",

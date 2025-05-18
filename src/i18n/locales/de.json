@@ -75,7 +75,12 @@
     "next": "Weiter",
     "previous": "Zurück",
     "required": "Erforderlich",
-    "error": "Fehler"
+    "error": "Fehler",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "add": "Hinzufügen",
+    "update": "Aktualisieren",
+    "actions": "Aktionen"
   },
   "profile": {
     "header": {
@@ -94,7 +99,10 @@
       "assets": "Vermögenswerte",
       "liabilities": "Verbindlichkeiten",
       "goalsAndWishes": "Ziele & Wünsche",
-      "riskAppetite": "Risikoprofil"
+      "riskAppetite": "Risikoprofil",
+      "step": "Schritt",
+      "of": "von",
+      "complete": "Abgeschlossen"
     },
     "personalDetails": {
       "title": "Persönliche Daten",
@@ -201,6 +209,12 @@
       "description": "Bitte geben Sie Informationen zu Ihren Verbindlichkeiten an.",
       "loanTypeLabel": "Kreditart",
       "loanType": {
+        "personal": "Privatkredit",
+        "home": "Hypothek",
+        "car": "Autokredit",
+        "business": "Geschäftskredit",
+        "education": "Studienkredit",
+        "other": "Sonstiges",
         "PersonalLoan": "Privatkredit",
         "HomeLoan": "Hypothek",
         "CarLoan": "Autokredit",
@@ -213,7 +227,10 @@
       "loanMonthlyRate": "Monatliche Rate",
       "loanInterest": "Zinssatz",
       "addLoan": "Kredit hinzufügen",
-      "removeLoan": "Entfernen"
+      "removeLoan": "Entfernen",
+      "editLoan": "Kredit bearbeiten",
+      "existingLoans": "Ihre bestehenden Kredite",
+      "total": "Gesamt"
     },
     "goalsAndWishes": {
       "title": "Ziele und Wünsche",

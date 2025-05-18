@@ -40,7 +40,15 @@ const mapFormToBackendValues = (formData) => {
   return backendData;
 };
 
-const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
+const EmploymentDetailsForm = ({ 
+  onComplete, 
+  onBack, 
+  personalId, 
+  initialData,
+  showUpdateButton,
+  onUpdate,
+  profileComplete 
+}) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
   const [loading, setLoading] = useState(false);
@@ -55,6 +63,8 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
     employedSince: "",
   });
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -104,6 +114,41 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
     fetchEmploymentDetails();
   }, []);
 
+  // Check form completion status and set update mode accordingly
+  useEffect(() => {
+    if (profileComplete || showUpdateButton) {
+      setIsUpdateMode(true);
+    } else {
+      setIsUpdateMode(false);
+    }
+  }, [profileComplete, showUpdateButton]);
+  
+  // Form validation with i18n messages
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.occupation.trim()) {
+      errors.occupation = safeTranslate('validation.required', 'This field is required');
+    }
+    
+    if (formData.employmentType === "employed") {
+      if (!formData.employerName.trim()) {
+        errors.employerName = safeTranslate('validation.required', 'This field is required');
+      }
+      
+      if (!formData.contractType) {
+        errors.contractType = safeTranslate('validation.selectRequired', 'Please select an option');
+      }
+      
+      if (!formData.employedSince) {
+        errors.employedSince = safeTranslate('validation.dateRequired', 'Please select a date');
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // Update personalId in formData if it changes
   useEffect(() => {
     if (personalId) {
@@ -127,6 +172,11 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                 ...mappedData,
                 personalId // Ensure personalId is included
               }));
+              
+              // Check if data is complete to determine mode
+              if (employmentData && employmentData.employmentId) {
+                setIsUpdateMode(true);
+              }
             }
           } catch (err) {
             // If 404, it means no employment details exist yet
@@ -174,6 +224,12 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
     e.preventDefault();
     setLoading(true);
     setError(null);
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // Ensure personalId is included in the submission data
@@ -193,11 +249,13 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
       console.log("Submitting employment details:", dataToSubmit);
 
       let response;
-      if (formData.employmentId) {
-        // Update existing employment details
+      if (isUpdateMode && formData.employmentId) {
+        // UPDATE mode - use UPDATE API
+        console.log("UPDATE mode: Updating existing employment details");
         response = await profileApi.updateEmploymentDetails(dataToSubmit);
       } else {
-        // Create new employment details
+        // CREATE mode - use POST API
+        console.log("CREATE mode: Creating new employment details");
         response = await profileApi.saveEmploymentDetails(dataToSubmit);
       }
 
@@ -205,13 +263,59 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
       onComplete(response);
     } catch (err) {
       console.error("Failed to save employment details:", err);
-      // Show more detailed error information
+      // Show more detailed error information with i18n
       if (err.response?.data) {
         console.error("API error response:", err.response.data);
-        setError(typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data, null, 2));
+        
+        // Try to extract validation errors if possible
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          const validationErrors = {};
+          err.response.data.errors.forEach(error => {
+            const field = error.path ? error.path[0] : 'general';
+            validationErrors[field] = safeTranslate(`validation.${field}.${error.code}`, error.message);
+          });
+          setValidationErrors(validationErrors);
+        }
+        
+        setError(typeof err.response.data === 'string' 
+          ? err.response.data 
+          : safeTranslate('profile.employment.apiError', 'API validation error. Please check highlighted fields.'));
       } else {
         setError(err.message || safeTranslate('profile.employment.saveFailed', 'Failed to save employment details. Please try again.'));
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle Update button click
+  const handleUpdate = async () => {
+    setLoading(true);
+    setError(null);
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      // Prepare data for submission
+      const dataToSubmit = mapFormToBackendValues({
+        ...formData,
+        personalId
+      });
+      
+      // Update existing employment details
+      await profileApi.updateEmploymentDetails(dataToSubmit);
+      
+      // Call the parent update handler if provided
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (err) {
+      console.error("Failed to update employment details:", err);
+      setError(safeTranslate("profile.updateError", "Failed to update data. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -251,7 +355,11 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
             name="employmentType"
             value={formData.employmentType}
             onChange={handleEmploymentTypeChange}
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
+            className={`w-full rounded-md border px-3 py-2 ${
+              validationErrors.employmentType 
+                ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                : 'border-input bg-background'
+            }`}
             required
           >
             {EMPLOYMENT_TYPE_OPTIONS.map(option => (
@@ -260,6 +368,9 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
               </option>
             ))}
           </select>
+          {validationErrors.employmentType && (
+            <p className="text-sm text-red-500 mt-1">{validationErrors.employmentType}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -271,8 +382,12 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
             name="occupation"
             value={formData.occupation}
             onChange={handleChange}
+            className={validationErrors.occupation ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
             required
           />
+          {validationErrors.occupation && (
+            <p className="text-sm text-red-500 mt-1">{validationErrors.occupation}</p>
+          )}
         </div>
 
         {formData.employmentType === "employed" && (
@@ -286,8 +401,12 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                 name="employerName"
                 value={formData.employerName}
                 onChange={handleChange}
+                className={validationErrors.employerName ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
                 required={formData.employmentType === "employed"}
               />
+              {validationErrors.employerName && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.employerName}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -299,7 +418,11 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                 name="contractType"
                 value={formData.contractType}
                 onChange={handleChange}
-                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                className={`w-full rounded-md border px-3 py-2 ${
+                  validationErrors.contractType 
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
+                    : 'border-input bg-background'
+                }`}
                 required={formData.employmentType === "employed"}
               >
                 <option value="">{safeTranslate('common.select', 'Select...')}</option>
@@ -309,6 +432,9 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                   </option>
                 ))}
               </select>
+              {validationErrors.contractType && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.contractType}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -320,8 +446,12 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                 name="contractDuration"
                 value={formData.contractDuration}
                 onChange={handleChange}
+                className={validationErrors.contractDuration ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
                 placeholder={safeTranslate('profile.employment.contractDurationPlaceholder', 'e.g., 1 year, indefinite')}
               />
+              {validationErrors.contractDuration && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.contractDuration}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -334,8 +464,12 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
                 type="date"
                 value={formData.employedSince}
                 onChange={handleChange}
+                className={validationErrors.employedSince ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
                 required={formData.employmentType === "employed"}
               />
+              {validationErrors.employedSince && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.employedSince}</p>
+              )}
             </div>
           </>
         )}
@@ -350,20 +484,40 @@ const EmploymentDetailsForm = ({ onComplete, onBack, personalId, initialData }) 
         >
           {safeTranslate('common.back', 'Back')}
         </Button>
-        <Button 
-          type="submit" 
-          disabled={loading}
-        >
-          {loading ? (
-            <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {safeTranslate('common.saving', 'Saving...')}
-            </span>
-          ) : safeTranslate('common.next', 'Next')}
-        </Button>
+        
+        {showUpdateButton ? (
+          <Button 
+            type="button"
+            onClick={handleUpdate}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {safeTranslate('common.updating', 'Updating...')}
+              </span>
+            ) : safeTranslate('common.update', 'Update')}
+          </Button>
+        ) : (
+          <Button 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {safeTranslate('common.saving', 'Saving...')}
+              </span>
+            ) : safeTranslate('common.next', 'Next')}
+          </Button>
+        )}
       </div>
     </form>
   );

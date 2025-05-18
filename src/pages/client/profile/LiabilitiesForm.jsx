@@ -12,6 +12,16 @@ const BUSINESS_LOAN = "BusinessLoan";
 const EDUCATION_LOAN = "EducationLoan";
 const OTHER_LOAN = "OtherLoan";
 
+// Loan type options for dropdown
+const LOAN_TYPE_OPTIONS = [
+  PERSONAL_LOAN,
+  HOME_LOAN,
+  CAR_LOAN,
+  BUSINESS_LOAN,
+  EDUCATION_LOAN,
+  OTHER_LOAN
+];
+
 // Debug function to safely stringify any value for rendering
 const safeStringify = (value) => {
   if (value === null || value === undefined) {
@@ -41,7 +51,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
   const [liabilities, setLiabilities] = useState([]);
   const [currentLiability, setCurrentLiability] = useState({
     personalId,
-    loanType: HOME_LOAN,
+    loanType: "",
     loanBank: "",
     loanAmount: 0,
     loanMonthlyRate: 0,
@@ -52,59 +62,49 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
 
   // Helper function to safely get loan type string
   const getLoanTypeString = (loanType) => {
-    console.log("loanType", loanType);
-    if (!loanType) return HOME_LOAN;
-    
-    if (typeof loanType === 'string') {
-      // Check for exact matches first
-      if (loanType === PERSONAL_LOAN) return PERSONAL_LOAN;
-      if (loanType === HOME_LOAN) return HOME_LOAN;
-      if (loanType === CAR_LOAN) return CAR_LOAN;
-      if (loanType === BUSINESS_LOAN) return BUSINESS_LOAN;
-      if (loanType === EDUCATION_LOAN) return EDUCATION_LOAN;
-      if (loanType === OTHER_LOAN) return OTHER_LOAN;
-      
-      // Check for partial matches
-      const loanTypeUpper = loanType.toUpperCase();
-      if (loanTypeUpper.includes("PERSONAL") || loanTypeUpper.includes("CONSUMER")) return PERSONAL_LOAN;
-      if (loanTypeUpper.includes("HOME") || loanTypeUpper.includes("MORTGAGE") || loanTypeUpper.includes("HOUSE")) return HOME_LOAN;
-      if (loanTypeUpper.includes("CAR") || loanTypeUpper.includes("AUTO") || loanTypeUpper.includes("VEHICLE")) return CAR_LOAN;
-      if (loanTypeUpper.includes("BUSINESS") || loanTypeUpper.includes("COMMERCIAL")) return BUSINESS_LOAN;
-      if (loanTypeUpper.includes("EDUCATION") || loanTypeUpper.includes("STUDENT") || loanTypeUpper.includes("STUDY")) return EDUCATION_LOAN;
-      
-      // Default to the original string if no match
-      return loanType;
-    }
-    
+    console.log("getLoanTypeString loanType:", loanType);
     try {
-      // If it's an object, try to convert to string
-      const str = JSON.stringify(loanType);
+      if (!loanType) return HOME_LOAN;
       
-      if (str.includes("PersonalLoan") || str.includes("personal")) return PERSONAL_LOAN;
-      if (str.includes("HomeLoan") || str.includes("home") || str.includes("mortgage")) return HOME_LOAN;
-      if (str.includes("CarLoan") || str.includes("car") || str.includes("auto")) return CAR_LOAN;
-      if (str.includes("BusinessLoan") || str.includes("business")) return BUSINESS_LOAN;
-      if (str.includes("EducationLoan") || str.includes("education") || str.includes("student")) return EDUCATION_LOAN;
-      if (str.includes("OtherLoan") || str.includes("other")) return OTHER_LOAN;
-    } catch (e) {
-      console.error("Error converting loan type to string:", e);
+      if (typeof loanType === 'string') {
+        // Check for exact matches first
+        if (loanType === PERSONAL_LOAN) return PERSONAL_LOAN;
+        if (loanType === HOME_LOAN) return HOME_LOAN;
+        if (loanType === CAR_LOAN) return CAR_LOAN;
+        if (loanType === BUSINESS_LOAN) return BUSINESS_LOAN;
+        if (loanType === EDUCATION_LOAN) return EDUCATION_LOAN;
+        if (loanType === OTHER_LOAN) return OTHER_LOAN;
+        
+        // Default to the original string if no match
+        console.log("getLoanTypeString loanType:", loanType);
+        return loanType;
+      }
+    } catch (error) {
+      console.error("Error in getLoanTypeString:", error);
     }
     
+    // Default fallback
     return HOME_LOAN;
   };
 
   // Function to get display name for loan type
   const getLoanTypeDisplay = (type) => {
-    const typeString = getLoanTypeString(type);
-    
-    switch(typeString) {
-      case PERSONAL_LOAN: return t('profile.liabilities.loanType.personal', 'Personal Loan');
-      case HOME_LOAN: return t('profile.liabilities.loanType.home', 'Home Loan / Mortgage');
-      case CAR_LOAN: return t('profile.liabilities.loanType.car', 'Car Loan');
-      case BUSINESS_LOAN: return t('profile.liabilities.loanType.business', 'Business Loan');
-      case EDUCATION_LOAN: return t('profile.liabilities.loanType.education', 'Education Loan');
-      case OTHER_LOAN: return t('profile.liabilities.loanType.other', 'Other Loan');
-      default: return typeString;
+    try {
+      const typeString = type || "";
+      
+      // Default display names
+      switch(typeString) {
+        case "PersonalLoan": return "Personal Loan";
+        case "HomeLoan": return "Home Loan / Mortgage";
+        case "CarLoan": return "Car Loan";
+        case "BusinessLoan": return "Business Loan";
+        case "EducationLoan": return "Education Loan";
+        case "OtherLoan": return "Other Loan";
+        default: return typeString || "Unknown Loan Type";
+      }
+    } catch (error) {
+      console.error("Error getting loan type display:", error);
+      return 'Unknown Loan Type';
     }
   };
 
@@ -113,19 +113,25 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
     if (initialData) {
       console.log("Setting liabilities data from initialData:", initialData);
       // Process initialData to ensure loanType is a string
-      if (Array.isArray(initialData)) {
+      if (Array.isArray(initialData) && initialData.length > 0) {
         const processedData = initialData.map(liability => ({
           ...liability,
           loanType: getLoanTypeString(liability.loanType)
         }));
+        console.log("processedData:", processedData);
         setLiabilities(processedData);
-      } else {
+      } else if (initialData && typeof initialData === 'object' && Object.keys(initialData).length > 0) {
+        console.log("initialData:", initialData);
         // If initialData is a single object, create an array with that object
         const singleLiability = {
           ...initialData,
           loanType: getLoanTypeString(initialData.loanType)
         };
+        console.log("singleLiability:", singleLiability);
         setLiabilities([singleLiability]);
+      } else {
+        // Initialize with empty array
+        setLiabilities([]);
       }
       setInitialLoading(false);
     }
@@ -144,6 +150,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
               ...liability,
               loanType: getLoanTypeString(liability.loanType)
             }));
+            console.log("processedData:", processedData);
             setLiabilities(processedData);
           } else {
             setLiabilities([]);
@@ -183,11 +190,13 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
 
   // Handle edit liability
   const handleEdit = (liability) => {
+    console.log("handleEdit liability:", liability);
     setCurrentLiability({
       ...liability,
       loanType: getLoanTypeString(liability.loanType)
     });
     setEditMode(true);
+    console.log("currentLiability:", currentLiability);
   };
 
   // Handle delete liability
@@ -205,9 +214,9 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
   const resetForm = () => {
     setCurrentLiability({
       personalId,
-      loanType: HOME_LOAN,
+      loanType: "HomeLoan",
       loanBank: "",
-      loanAmount: 0,
+      loanAmount: 0,  
       loanMonthlyRate: 0,
       loanInterest: 0
     });
@@ -226,7 +235,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
         ...currentLiability,
         loanType: getLoanTypeString(currentLiability.loanType)
       };
-      
+      console.log("dataToSubmit:", dataToSubmit);
       let response;
       if (editMode && currentLiability.liabilityId) {
         // Update existing liability
@@ -239,6 +248,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
             loanType: getLoanTypeString(response.loanType)
           } : item
         ));
+        console.log("liabilities:", liabilities);
       } else {
         // Create new liability
         response = await profileApi.saveLiability({
@@ -251,6 +261,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
           ...response,
           loanType: getLoanTypeString(response.loanType)
         }]);
+        console.log("liabilities:", liabilities);
       }
 
       // Reset the form
@@ -318,58 +329,68 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-secondary/30">
-                  <th className="px-4 py-2 text-left">{t('profile.liabilities.loanType', 'Type')}</th>
-                  <th className="px-4 py-2 text-left">{t('profile.liabilities.loanBank', 'Bank')}</th>
-                  <th className="px-4 py-2 text-right">{t('profile.liabilities.loanAmount', 'Amount')}</th>
-                  <th className="px-4 py-2 text-right">{t('profile.liabilities.loanMonthlyRate', 'Monthly')}</th>
-                  <th className="px-4 py-2 text-right">{t('profile.liabilities.loanInterest', 'Interest %')}</th>
-                  <th className="px-4 py-2 text-center">{t('common.actions', 'Actions')}</th>
+                  <th scope="col" className="px-4 py-2 text-left">Type</th>
+                  <th scope="col" className="px-4 py-2 text-left">Bank</th>
+                  <th scope="col" className="px-4 py-2 text-right">Amount</th>
+                  <th scope="col" className="px-4 py-2 text-right">Monthly</th>
+                  <th scope="col" className="px-4 py-2 text-right">Interest %</th>
+                  <th scope="col" className="px-4 py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {safeLiabilities.map((liability) => {
-                  // Ensure we have string values for display
-                  const loanTypeStr = getLoanTypeString(liability.loanType);
-                  const loanTypeDisplay = getLoanTypeDisplay(loanTypeStr);
-                  const loanBank = typeof liability.loanBank === 'string' ? liability.loanBank : safeStringify(liability.loanBank);
-                  const loanAmount = parseFloat(liability.loanAmount || 0).toFixed(2);
-                  const loanMonthlyRate = parseFloat(liability.loanMonthlyRate || 0).toFixed(2);
-                  const loanInterest = parseFloat(liability.loanInterest || 0).toFixed(2);
+                  console.log("liability:", liability);
+                  if (!liability) return null;
                   
-                  return (
-                    <tr key={liability.liabilityId || `liability-${Math.random()}`} className="border-b border-secondary/20">
-                      <td className="px-4 py-2">{loanTypeDisplay}</td>
-                      <td className="px-4 py-2">{loanBank}</td>
-                      <td className="px-4 py-2 text-right">€{loanAmount}</td>
-                      <td className="px-4 py-2 text-right">€{loanMonthlyRate}</td>
-                      <td className="px-4 py-2 text-right">{loanInterest}%</td>
-                      <td className="px-4 py-2 text-center">
-                        <div className="flex justify-center space-x-2">
-                          <button 
-                            type="button"
-                            onClick={() => handleEdit(liability)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            {t('common.edit', 'Edit')}
-                          </button>
-                          <button 
-                            type="button"
-                            onClick={() => handleDelete(liability.liabilityId)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            {t('common.delete', 'Delete')}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
+                  try {
+                    // Ensure we have string values for display
+                    const loanTypeStr = getLoanTypeString(liability.loanType);
+                    const loanTypeDisplay = getLoanTypeDisplay(loanTypeStr);
+                    const loanBank = typeof liability.loanBank === 'string' ? liability.loanBank : safeStringify(liability.loanBank);
+                    const loanAmount = parseFloat(liability.loanAmount || 0).toFixed(2);
+                    const loanMonthlyRate = parseFloat(liability.loanMonthlyRate || 0).toFixed(2);
+                    const loanInterest = parseFloat(liability.loanInterest || 0).toFixed(2);
+                    
+                    return (
+                      <tr key={liability.liabilityId || `liability-${Math.random()}`} className="border-b border-secondary/20">
+                        <td className="px-4 py-2">{loanTypeDisplay}</td>
+                        <td className="px-4 py-2">{loanBank}</td>
+                        <td className="px-4 py-2 text-right">€{loanAmount}</td>
+                        <td className="px-4 py-2 text-right">€{loanMonthlyRate}</td>
+                        <td className="px-4 py-2 text-right">{loanInterest}%</td>
+                        <td className="px-4 py-2 text-center">
+                          <div className="flex justify-center space-x-2">
+                            <button 
+                              type="button"
+                              onClick={() => handleEdit(liability)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDelete(liability.liabilityId)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  } catch (error) {
+                    console.error("Error rendering liability row:", error);
+                    return null; // Skip rendering this item if there's an error
+                  }
                 })}
-                <tr className="bg-secondary/10 font-medium">
-                  <td colSpan={2} className="px-4 py-2 text-right">{t('profile.liabilities.total', 'Total')}:</td>
-                  <td className="px-4 py-2 text-right">€{calculateTotalAmount().toFixed(2)}</td>
-                  <td className="px-4 py-2 text-right">€{calculateTotalMonthly().toFixed(2)}</td>
-                  <td colSpan={2}></td>
-                </tr>
+                {safeLiabilities.length > 0 && (
+                  <tr className="bg-secondary/10 font-medium">
+                    <td colSpan={2} className="px-4 py-2 text-right">Total:</td>
+                    <td className="px-4 py-2 text-right">€{calculateTotalAmount().toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right">€{calculateTotalMonthly().toFixed(2)}</td>
+                    <td colSpan={2}></td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -392,17 +413,17 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
             <select
               id="loanType"
               name="loanType"
-              value={typeof currentLiability.loanType === 'string' ? currentLiability.loanType : HOME_LOAN}
+              value={currentLiability.loanType}  
               onChange={handleChange}
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               required
             >
-              <option value={PERSONAL_LOAN}>{t('profile.liabilities.loanType.personal', 'Personal Loan')}</option>
-              <option value={HOME_LOAN}>{t('profile.liabilities.loanType.home', 'Home Loan / Mortgage')}</option>
-              <option value={CAR_LOAN}>{t('profile.liabilities.loanType.car', 'Car Loan')}</option>
-              <option value={BUSINESS_LOAN}>{t('profile.liabilities.loanType.business', 'Business Loan')}</option>
-              <option value={EDUCATION_LOAN}>{t('profile.liabilities.loanType.education', 'Education Loan')}</option>
-              <option value={OTHER_LOAN}>{t('profile.liabilities.loanType.other', 'Other Loan')}</option>
+              <option value="">{t('common.select', 'Select...')}</option>
+              {LOAN_TYPE_OPTIONS.map(option => (
+                <option key={option} value={option}>
+                  {getLoanTypeDisplay(option)}
+                </option>
+              ))}
             </select>
           </div>
 
