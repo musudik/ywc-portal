@@ -208,13 +208,7 @@
       "title": "Liabilities",
       "description": "Please provide information about your liabilities.",
       "loanTypeLabel": "Loan Type",
-      "loanType": {
-        "personal": "Personal Loan",
-        "home": "Home Loan / Mortgage",
-        "car": "Car Loan",
-        "business": "Business Loan",
-        "education": "Education Loan",
-        "other": "Other Loan",
+      "loanTypeOptions": {
         "PersonalLoan": "Personal Loan",
         "HomeLoan": "Home Loan / Mortgage",
         "CarLoan": "Car Loan",
@@ -255,7 +249,7 @@
         "high": "High"
       },
       "investmentHorizonLabel": "Investment Horizon",
-      "investmentHorizon": {
+      "investmentHorizonOptions": {
         "short-term": "Short-Term",
         "medium-term": "Medium-Term",
         "long-term": "Long-Term"

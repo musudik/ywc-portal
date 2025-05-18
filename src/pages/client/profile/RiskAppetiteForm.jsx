@@ -187,7 +187,7 @@ const RiskAppetiteForm = ({
               <option value="">{t('common.select', 'Select...')}</option>
               {INVESTMENT_HORIZON_OPTIONS.map(option => (
                 <option key={option} value={option}>
-                  {t(`profile.riskAppetite.investmentHorizon.${option.replace('-', '_')}`, option.charAt(0).toUpperCase() + option.slice(1).replace('-', ' '))}
+                  {t(`profile.riskAppetite.investmentHorizonOptions.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace('-', ' '))}
                 </option>
               ))}
             </select>

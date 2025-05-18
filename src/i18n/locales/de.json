@@ -208,13 +208,7 @@
       "title": "Verbindlichkeiten",
       "description": "Bitte geben Sie Informationen zu Ihren Verbindlichkeiten an.",
       "loanTypeLabel": "Kreditart",
-      "loanType": {
-        "personal": "Privatkredit",
-        "home": "Hypothek",
-        "car": "Autokredit",
-        "business": "Geschäftskredit",
-        "education": "Studienkredit",
-        "other": "Sonstiges",
+      "loanTypeOptions": {
         "PersonalLoan": "Privatkredit",
         "HomeLoan": "Hypothek",
         "CarLoan": "Autokredit",
@@ -255,7 +249,7 @@
         "high": "Hoch"
       },
       "investmentHorizonLabel": "Anlagehorizont",
-      "investmentHorizon": {
+      "investmentHorizonOptions": {
         "short-term": "Kurzfristig",
         "medium-term": "Mittelfristig",
         "long-term": "Langfristig"

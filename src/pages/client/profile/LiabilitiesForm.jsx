@@ -5,22 +5,9 @@ import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
 // Loan type constants matching backend values
-const PERSONAL_LOAN = "PersonalLoan";
-const HOME_LOAN = "HomeLoan";
-const CAR_LOAN = "CarLoan";
-const BUSINESS_LOAN = "BusinessLoan";
-const EDUCATION_LOAN = "EducationLoan";
-const OTHER_LOAN = "OtherLoan";
 
 // Loan type options for dropdown
-const LOAN_TYPE_OPTIONS = [
-  PERSONAL_LOAN,
-  HOME_LOAN,
-  CAR_LOAN,
-  BUSINESS_LOAN,
-  EDUCATION_LOAN,
-  OTHER_LOAN
-];
+const LOAN_TYPE_OPTIONS = ["PersonalLoan", "HomeLoan", "CarLoan", "BusinessLoan", "EducationLoan", "OtherLoan"];
 
 // Debug function to safely stringify any value for rendering
 const safeStringify = (value) => {
@@ -64,16 +51,16 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
   const getLoanTypeString = (loanType) => {
     console.log("getLoanTypeString loanType:", loanType);
     try {
-      if (!loanType) return HOME_LOAN;
+      if (!loanType) return "HomeLoan";
       
       if (typeof loanType === 'string') {
         // Check for exact matches first
-        if (loanType === PERSONAL_LOAN) return PERSONAL_LOAN;
-        if (loanType === HOME_LOAN) return HOME_LOAN;
-        if (loanType === CAR_LOAN) return CAR_LOAN;
-        if (loanType === BUSINESS_LOAN) return BUSINESS_LOAN;
-        if (loanType === EDUCATION_LOAN) return EDUCATION_LOAN;
-        if (loanType === OTHER_LOAN) return OTHER_LOAN;
+        if (loanType === "PersonalLoan") return "PersonalLoan";
+        if (loanType === "HomeLoan") return "HomeLoan";
+        if (loanType === "CarLoan") return "CarLoan";
+        if (loanType === "BusinessLoan") return "BusinessLoan";
+        if (loanType === "EducationLoan") return "EducationLoan";
+        if (loanType === "OtherLoan") return "OtherLoan";
         
         // Default to the original string if no match
         console.log("getLoanTypeString loanType:", loanType);
@@ -84,7 +71,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
     }
     
     // Default fallback
-    return HOME_LOAN;
+    return "HomeLoan";
   };
 
   // Function to get display name for loan type
@@ -421,7 +408,7 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
               <option value="">{t('common.select', 'Select...')}</option>
               {LOAN_TYPE_OPTIONS.map(option => (
                 <option key={option} value={option}>
-                  {getLoanTypeDisplay(option)}
+                  {t(`profile.liabilities.loanTypeOptions.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
                 </option>
               ))}
             </select>

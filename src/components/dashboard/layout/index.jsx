@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import Header from "../header";
-import Footer from "../footer";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -110,7 +108,7 @@ const DashboardLayout = ({ children }) => {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: <HomeIcon />, path: "/client/dashboard" },
     { id: "profile", label: "Profile", icon: <ProfileIcon />, path: "/client/profile" },
-    { id: "settings", label: "Settings", icon: <SettingsIcon />, path: "/client/settings" }
+    { id: "settings", label: "Settings", icon: <SettingsIcon />, path: "/client/settings" },
   ];
 
   const toggleMobileSidebar = () => {
@@ -136,16 +134,27 @@ const DashboardLayout = ({ children }) => {
     return item ? item.id : "dashboard";
   };
 
-  // Ensure user data is properly formatted as strings
-  const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User' : 'User';
+  // Extract user name from user object, handling multiple possible data formats
+  let userName = 'User';
+  if (user) {
+    if (user.displayName) {
+      userName = user.displayName;
+    } else if (user.firstName || user.lastName) {
+      userName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    } else if (user.name) {
+      userName = user.name;
+    }
+  }
   
-  // Make sure userRole is always a string
+  // Extract user role
   let userRole = 'Client';
   if (user?.role) {
     if (typeof user.role === 'string') {
       userRole = user.role;
-    } else if (user.role && typeof user.role === 'object' && user.role.name) {
-      userRole = user.role.name;
+    } else if (user.role && typeof user.role === 'object') {
+      if (user.role.name) {
+        userRole = user.role.name;
+      }
     }
   }
   
