@@ -6,6 +6,7 @@ import { Card, CardContent } from "../../components/ui/card";
 import LanguageSwitcher from "../../components/ui/LanguageSwitcher";
 import { useTheme } from "../../components/ui/ThemeProvider";
 import { useAuth } from "../../contexts/AuthContext";
+import Logo from "../../components/ui/Logo";
 
 // Icon components
 const SearchIcon = () => (
@@ -267,7 +268,10 @@ function AdminDashboard() {
               <button className="md:hidden" onClick={toggleMobileSidebar}>
                 <MenuIcon />
               </button>
-              <h2 className="text-lg font-medium">Welcome to Admin Dashboard</h2>
+              <div className="flex items-center gap-2">
+                <Logo />
+                <h2 className="text-lg font-medium">YourWealth.Coach</h2>
+              </div>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
               <div className="relative hidden md:block">

@@ -15,23 +15,30 @@ const resources = {
 };
 
 i18n
-  // detect user language
-  .use(LanguageDetector)
   // pass the i18n instance to react-i18next
   .use(initReactI18next)
+  // detect user language (use only safe methods)
+  .use(LanguageDetector)
   // init i18next
   .init({
     resources,
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
+    debug: false, // Disable debug
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
     returnObjects: true, // Enable returnObjects to access nested translation objects
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'], // Only use localStorage to avoid any browser API calls
       caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
     },
+    nsSeparator: false,
+    keySeparator: false,
+    saveMissing: false, // Don't attempt to save missing translations
+    react: {
+      useSuspense: false // Disable suspense which can cause issues
+    }
   });
 
 export default i18n; 

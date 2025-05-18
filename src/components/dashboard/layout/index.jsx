@@ -4,6 +4,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../../components/ui/LanguageSwitcher";
 import { useTheme } from "../../../components/ui/ThemeProvider";
+import Logo from "../../../components/ui/Logo";
 
 // Icon components
 const HomeIcon = () => (
@@ -52,15 +53,6 @@ const MenuIcon = () => (
     <line x1="3" y1="12" x2="21" y2="12" />
     <line x1="3" y1="6" x2="21" y2="6" />
     <line x1="3" y1="18" x2="21" y2="18" />
-  </svg>
-);
-
-const YWCLogo = () => (
-  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 40C31.0457 40 40 31.0457 40 20C40 8.9543 31.0457 0 20 0C8.9543 0 0 8.9543 0 20C0 31.0457 8.9543 40 20 40Z" fill="#1DB954" fillOpacity="0.1"/>
-    <path d="M28.2222 11.7778H11.7778V28.2222H28.2222V11.7778Z" stroke="#1DB954" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M11.7778 20H28.2222" stroke="#1DB954" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M20 11.7778V28.2222" stroke="#1DB954" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -220,7 +212,7 @@ const DashboardLayout = ({ children }) => {
                 <MenuIcon />
               </button>
               <div className="flex items-center gap-2">
-                <YWCLogo />
+                <Logo />
                 <h2 className="text-lg font-medium">
                   YourWealth.Coach
                 </h2>

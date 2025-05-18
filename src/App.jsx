@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import CoachDashboard from "./pages/coach/Dashboard";
 import ProfileSetup from "./pages/client/profile";
 import ClientSettings from "./pages/client/settings";
+import ClientForms from "./pages/client/forms";
 // Import i18n configuration
 import "./i18n/i18n";
 import { ThemeProvider } from "./components/ui/ThemeProvider";
@@ -86,6 +87,7 @@ function App() {
                   <Route path="/client/dashboard" element={<ClientDashboard />} />
                   {/* Add more client routes here */}
                   <Route path="/client/settings" element={<ClientSettings />} />
+                  <Route path="/client/forms" element={<ClientForms />} />
                 </Route>
                 <Route path="/client/profile" element={<ProfileSetup />} />
               </Route>
