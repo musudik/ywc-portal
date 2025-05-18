@@ -302,7 +302,7 @@ const PersonalDetailsForm = ({
             >
               {APPLICANT_TYPE_OPTIONS.map(option => (
                 <option key={option} value={option}>
-                  {safeTranslate(`profile.personalDetails.applicantType.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
+                  {safeTranslate(`profile.personalDetails.applicantTypeOptions.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
                 </option>
               ))}
             </select>

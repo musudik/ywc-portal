@@ -701,19 +701,6 @@ const ProfileSetup = () => {
               </div>
             )}
             
-            {/* Update button when a completed step is selected - removed notification text */}
-            {showUpdateButton && (
-              <div className="px-6 py-4 bg-green-50 dark:bg-green-900/20 border-b border-border flex justify-end">
-                <Button 
-                  onClick={handleUpdate}
-                  disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {loading ? t('Updating...') : t('Update')}
-                </Button>
-              </div>
-            )}
-            
             {/* Form content with proper padding */}
             <div className="p-6">
               {renderStepForm()}

@@ -133,9 +133,9 @@
         "other": "Other"
       },
       "applicantTypeLabel": "Applicant Type",
-      "applicantType": {
-        "primary": "Primary Applicant",
-        "secondary": "Secondary Applicant"
+      "applicantTypeOptions": {
+        "PrimaryApplicant": "Primary Applicant",
+        "SecondaryApplicant": "Secondary Applicant"
       },
       "saveFailed": "Failed to save personal details. Please try again."
     },

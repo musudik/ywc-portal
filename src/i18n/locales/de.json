@@ -133,9 +133,9 @@
         "other": "Sonstiges"
       },
       "applicantTypeLabel": "Antragstellertyp",
-      "applicantType": {
-        "primary": "Hauptantragsteller",
-        "secondary": "Nebenantragsteller"
+      "applicantTypeOptions": {
+        "PrimaryApplicant": "Hauptantragsteller",
+        "SecondaryApplicant": "Nebenantragsteller"
       },
       "saveFailed": "Fehler beim Speichern der persönlichen Daten. Bitte versuchen Sie es erneut."
     },
