@@ -265,5 +265,50 @@
       "healthInsuranceNumber": "Krankenversicherungsnummer",
       "healthInsuranceProof": "Krankenversicherungsnachweis"
     }
+  },
+  "form": {
+    "consent": "Einwilligung",
+    "immobilien": {
+      "title": "Immobilien Formular",
+      "description": "Immobilien Antrag",
+      "consent": "Durch die Bereitstellung Ihrer Daten stimmen Sie deren Verwendung für folgende Zwecke zu: Beantwortung Ihrer Anfragen, Bereitstellung von Informationen über Immobilien und Zusendung von Newslettern. Sie haben das Recht, Ihre Einwilligung jederzeit zu widerrufen. Sie haben auch das Recht auf Zugang, Berichtigung, Löschung und Übertragung Ihrer Daten. Mit meiner Unterschrift erkläre ich mich mit der Verwendung meiner Daten wie oben beschrieben einverstanden."
+    },
+    "privateHealthInsurance": {
+      "consent": "Hiermit stimme ich der Erhebung, Verwendung und Weitergabe meiner personenbezogenen Daten an Krankenversicherungsunternehmen zum Zwecke der Verwaltung meiner Krankenversicherungspolice zu, einschließlich Abrechnung, Bearbeitung von Ansprüchen und Bereitstellung von Informationen zu meiner Police. Diese Daten können meinen Namen, meine Adresse, mein Geburtsdatum, meine Krankengeschichte und andere relevante Informationen umfassen. Ich verstehe, dass meine Daten mit Ärzten, Krankenhäusern, Apotheken und anderen Dienstleistern geteilt werden können, soweit dies zur Bearbeitung meiner Ansprüche und zur Erbringung von Dienstleistungen erforderlich ist. Ich verstehe auch, dass ich das Recht habe, meine Einwilligung jederzeit zu widerrufen. Mir ist bewusst, dass der Widerruf meiner Einwilligung meine Möglichkeit, bestimmte Dienstleistungen zu erhalten, beeinträchtigen kann. Ich habe dieses Einwilligungsformular gelesen und verstanden und stimme seinen Bedingungen zu."
+    },
+    "stateHealthInsurance": {
+      "consent": "Ich willige in die Verarbeitung meiner personenbezogenen Daten durch gesetzliche Krankenversicherungsträger zum Zweck der Prüfung der Versicherungsberechtigung, der Bearbeitung von Ansprüchen und der Verwaltung von Leistungen ein. Meine Informationen können an Gesundheitsdienstleister, Behörden und andere Einrichtungen weitergegeben werden, soweit dies gesetzlich vorgeschrieben ist. Ich verstehe, dass ich das Recht habe, auf meine personenbezogenen Daten zuzugreifen, sie zu korrigieren oder zu löschen, und dass ich diese Einwilligung jederzeit widerrufen kann, wobei dies die Dienstleistungen, die ich erhalte, beeinträchtigen kann. Ich bestätige, dass alle bereitgestellten Informationen richtig und vollständig sind."
+    },
+    "kfz": {
+      "consent": "Hiermit ermächtige ich die Erhebung und Verarbeitung meiner persönlichen und fahrzeugbezogenen Daten zum Zweck der Einholung von Kfz-Versicherungsangeboten und -policen. Dies umfasst meine Kontaktinformationen, Fahrhistorie, Fahrzeugdetails und Zahlungsinformationen. Ich verstehe, dass diese Daten bei Bedarf an Versicherungsunternehmen, Schadensregulierer und Reparaturdienste weitergegeben werden können. Ich erkenne an, dass ich diese Einwilligung jederzeit widerrufen kann, wobei dies Dienstleistungen im Zusammenhang mit meiner Versicherungspolice beeinträchtigen kann. Ich bestätige, dass die bereitgestellten Informationen wahrheitsgemäß und korrekt sind."
+    },
+    "loans": {
+      "consent": "Ich ermächtige die Erhebung, Verwendung und Offenlegung meiner finanziellen und persönlichen Informationen zum Zweck der Bewertung meines Kreditantrags, der Feststellung der Kreditwürdigkeit und der Verwaltung einer eventuellen Kreditvereinbarung. Dies umfasst die Überprüfung meiner Kredithistorie, die Verifizierung der Beschäftigung und den Austausch von Informationen mit relevanten Finanzinstituten. Ich verstehe, dass meine Daten wie gesetzlich vorgeschrieben aufbewahrt werden und dass ich das Recht habe, auf meine Informationen zuzugreifen, sie zu korrigieren und deren Löschung zu beantragen. Ich erkenne an, dass die Verweigerung der Einwilligung dazu führen kann, dass mein Kreditantrag nicht bearbeitet wird."
+    },
+    "electricity": {
+      "consent": "Ich ermächtige die Erhebung und Verarbeitung meiner personenbezogenen Daten, einschließlich Kontaktinformationen, Zahlungsdetails und Energieverbrauchsmuster zum Zweck der Stromversorgungsdienste. Diese Daten können für Abrechnungen, Serviceverbesserungen und die Einhaltung gesetzlicher Vorschriften verwendet werden. Ich verstehe, dass meine Informationen bei Bedarf an Netzbetreiber, Zahlungsabwickler und Regulierungsbehörden weitergegeben werden können. Ich erkenne mein Recht an, auf meine personenbezogenen Daten zuzugreifen, sie zu korrigieren und deren Löschung zu beantragen, und ich verstehe, dass ich diese Einwilligung widerrufen kann, wobei dies die Dienste, die ich erhalte, beeinträchtigen kann."
+    },
+    "sanuspay": {
+      "consent": "Ich stimme zu, dass SanusPay meine persönlichen und Zahlungsinformationen für Gesundheitszahlungsdienste verarbeitet, einschließlich der Erleichterung von Zahlungen an Gesundheitsdienstleister, der Bearbeitung von Ansprüchen und der Verwaltung meines Gesundheitszahlungskontos. Meine Informationen können an Gesundheitsdienstleister, Versicherungsunternehmen und Zahlungsabwickler weitergegeben werden, soweit dies zur Erbringung dieser Dienste erforderlich ist. Ich verstehe, dass ich das Recht habe, jederzeit auf meine personenbezogenen Daten zuzugreifen, sie zu korrigieren oder zu löschen, und dass ich diese Einwilligung widerrufen kann, wobei dies meine Fähigkeit, den Dienst zu nutzen, beeinträchtigen kann. Ich bestätige, dass alle bereitgestellten Informationen korrekt sind."
+    },
+    "gems": {
+      "consent": "Ich ermächtige die Erhebung und Verarbeitung meiner personenbezogenen Daten für Investitionen in Edelsteine und Edelmetalle, einschließlich Kontaktinformationen, Anlagepräferenzen und Zahlungsdetails. Diese Informationen können verwendet werden, um Käufe zu verarbeiten, Aufzeichnungen über Investitionen zu führen und Updates zu Marktbedingungen bereitzustellen. Ich verstehe, dass meine Daten nach Bedarf an Verwahrer, Händler und Regulierungsbehörden weitergegeben werden können. Ich erkenne mein Recht an, auf meine Daten zuzugreifen, sie zu korrigieren und deren Löschung zu beantragen, und ich verstehe, dass ich diese Einwilligung jederzeit widerrufen kann, wobei dies die mir erbrachten Anlagedienstleistungen beeinträchtigen kann."
+    },
+    "description": "Bitte füllen Sie alle erforderlichen Informationen aus",
+    "date": "Datum",
+    "place": "Ort",
+    "placePlaceholder": "Stadt/Ort eingeben",
+    "signature": "Unterschrift",
+    "agreeToTerms": "Ich stimme den oben genannten Bedingungen zu",
+    "submit": "Formular absenden",
+    "submitting": "Formular wird übermittelt...",
+    "success": "Formular erfolgreich eingereicht!",
+    "errors": {
+      "loadingFailed": "Fehler beim Laden der Formulardaten. Bitte versuchen Sie es erneut.",
+      "placeRequired": "Bitte geben Sie den Ort ein",
+      "consentRequired": "Sie müssen den Bedingungen zustimmen",
+      "signatureRequired": "Bitte geben Sie Ihre Unterschrift",
+      "submissionFailed": "Fehler beim Übermitteln des Formulars. Bitte versuchen Sie es erneut."
+    }
   }
 } 

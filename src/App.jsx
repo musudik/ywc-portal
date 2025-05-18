@@ -6,13 +6,26 @@ import ClientDashboard from "./pages/client/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import CoachDashboard from "./pages/coach/Dashboard";
 import ProfileSetup from "./pages/client/profile";
-import ClientSettings from "./pages/client/settings";
 import ClientForms from "./pages/client/forms";
+
+// Settings pages
+import ClientSettings from "./pages/client/settings";
+import AppearanceSettings from "./pages/client/settings/appearance";
+import NotificationSettings from "./pages/client/settings/notifications";
+import PrivacySettings from "./pages/client/settings/privacy";
+import LanguageSettings from "./pages/client/settings/language";
+import AccessibilitySettings from "./pages/client/settings/accessibility";
+import AccountSettings from "./pages/client/settings/account";
+import SecuritySettings from "./pages/client/settings/security";
+
 // Import i18n configuration
 import "./i18n/i18n";
 import { ThemeProvider } from "./components/ui/ThemeProvider";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProfileProvider, useProfile } from "./contexts/ProfileContext";
+
+// Import Immobilien form
+import ImmobilienForm from "./pages/client/forms/ImmobilienForm";
 
 // Protected route component
 const ProtectedRoute = ({ allowedRoles }) => {
@@ -85,8 +98,18 @@ function App() {
               <Route element={<ProtectedRoute allowedRoles={["CLIENT"]} />}>
                 <Route element={<ClientRoute />}>
                   <Route path="/client/dashboard" element={<ClientDashboard />} />
-                  {/* Add more client routes here */}
+                  {/* Settings routes */}
                   <Route path="/client/settings" element={<ClientSettings />} />
+                  <Route path="/client/settings/appearance" element={<AppearanceSettings />} />
+                  <Route path="/client/settings/notifications" element={<NotificationSettings />} />
+                  <Route path="/client/settings/privacy" element={<PrivacySettings />} />
+                  <Route path="/client/settings/language" element={<LanguageSettings />} />
+                  <Route path="/client/settings/accessibility" element={<AccessibilitySettings />} />
+                  <Route path="/client/settings/account" element={<AccountSettings />} />
+                  <Route path="/client/settings/security" element={<SecuritySettings />} />
+                  {/* Form routes */}
+                  <Route path="/client/forms/immobilien" element={<ImmobilienForm />} />
+                  {/* Other client routes */}
                   <Route path="/client/forms" element={<ClientForms />} />
                 </Route>
                 <Route path="/client/profile" element={<ProfileSetup />} />

@@ -24,35 +24,35 @@ const TwoFactorIcon = () => (
 );
 
 // Navigation tabs for settings page
-const SettingsTabs = () => {
-  const tabs = [
-    { name: "Account", active: true },
-    { name: "Real Estate", active: false },
-    { name: "Loans", active: false },
-    { name: "Insurance", active: false },
-    { name: "KFZ", active: false },
-    { name: "Electricity", active: false },
-    { name: "Sanuspay", active: false },
-    { name: "Gems", active: false },
-    { name: "Miscellaneous", active: false }
-  ];
+// const SettingsTabs = () => {
+//   const tabs = [
+//     { name: "Account", active: true },
+//     { name: "Real Estate", active: false },
+//     { name: "Loans", active: false },
+//     { name: "Insurance", active: false },
+//     { name: "KFZ", active: false },
+//     { name: "Electricity", active: false },
+//     { name: "Sanuspay", active: false },
+//     { name: "Gems", active: false },
+//     { name: "Miscellaneous", active: false }
+//   ];
 
-  return (
-    <div className="overflow-x-auto">
-      <nav className="flex border-b border-muted mb-8 min-w-max">
-        {tabs.map((tab, index) => (
-          <a 
-            key={index}
-            href="#" 
-            className={`px-4 py-3 text-sm whitespace-nowrap ${tab.active ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
-          >
-            {tab.name}
-          </a>
-        ))}
-      </nav>
-    </div>
-  );
-};
+//   return (
+//     <div className="overflow-x-auto">
+//       <nav className="flex border-b border-muted mb-8 min-w-max">
+//         {tabs.map((tab, index) => (
+//           <a 
+//             key={index}
+//             href="#" 
+//             className={`px-4 py-3 text-sm whitespace-nowrap ${tab.active ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
+//           >
+//             {tab.name}
+//           </a>
+//         ))}
+//       </nav>
+//     </div>
+//   );
+// };
 
 function Dashboard() {
   const { t } = useTranslation();
@@ -86,17 +86,17 @@ function Dashboard() {
         }
         
         // Get verification status
-        try {
-          const verificationResponse = await profileApi.getVerificationStatus();
-          setVerificationStatus(verificationResponse);
-        } catch (verificationError) {
-          console.error("Failed to fetch verification status:", verificationError);
-          // Use default value if API fails
-          setVerificationStatus({ 
-            status: profileData?.verificationStatus || "unverified", 
-            message: "Verification status could not be retrieved" 
-          });
-        }
+        // try {
+        //   const verificationResponse = await profileApi.getVerificationStatus();
+        //   setVerificationStatus(verificationResponse);
+        // } catch (verificationError) {
+        //   console.error("Failed to fetch verification status:", verificationError);
+        //   // Use default value if API fails
+        //   setVerificationStatus({ 
+        //     status: profileData?.verificationStatus || "unverified", 
+        //     message: "Verification status could not be retrieved" 
+        //   });
+        // }
       } catch (err) {
         console.error("Failed to fetch profile data:", err);
         setError("Failed to load profile data. Please try again later.");
@@ -121,16 +121,16 @@ function Dashboard() {
   }, [authUser]);
 
   const handleVerifyAccount = async () => {
-    try {
-      await profileApi.requestVerification();
-      alert("Verification request submitted successfully!");
-      // Refresh verification status
-      const verificationResponse = await profileApi.getVerificationStatus();
-      setVerificationStatus(verificationResponse);
-    } catch (err) {
-      console.error("Failed to request verification:", err);
-      alert("Failed to submit verification request. Please try again later.");
-    }
+    // try {
+    //   await profileApi.requestVerification();
+    //   alert("Verification request submitted successfully!");
+    //   // Refresh verification status
+    //   const verificationResponse = await profileApi.getVerificationStatus();
+    //   setVerificationStatus(verificationResponse);
+    // } catch (err) {
+    //   console.error("Failed to request verification:", err);
+    //   alert("Failed to submit verification request. Please try again later.");
+    // }
   };
   
   // Format date function

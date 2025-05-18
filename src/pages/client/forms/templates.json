@@ -1,0 +1,195 @@
+{
+    "immobilien": {
+        "name": "immobilien",
+        "description": "Immobilien Antrag",
+        "singleApplicant": false,
+        "consent": "form.immobilien.consent",
+        "required": [
+            "personal",
+            "employment",
+            "income",
+            "expenses",
+            "assets",
+            "liabilities",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "expenses": [],
+            "assets": [],
+            "liabilities": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "bankIBAN": [],
+            "employment": [],
+            "income": [],
+            "expenses": [],
+            "assets": [],
+            "liabilities": [],
+            "consent": []
+        }
+    },
+    "privateHealthInsurance": {
+        "name": "privateHealthInsurance",
+        "description": "Private Gesundheitsversicherung Antrag",
+        "singleApplicant": true,
+        "consent": "form.privateHealthInsurance.consent",
+        "required": [
+            "personal",
+            "employment",
+            "income",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        }
+    },
+    "stateHealthInsurance": {
+        "name": "stateHealthInsurance",
+        "description": "Staatliche Gesundheitsversicherung Antrag",
+        "singleApplicant": true,
+        "consent": "form.stateHealthInsurance.consent",
+        "required": [
+            "personal",
+            "employment",
+            "income",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        }
+    },
+    "kfz": {
+        "name": "kfz",
+        "description": "KFZ Versicherung Antrag",
+        "singleApplicant": true,
+        "consent": "form.kfz.consent",
+        "required": [
+            "personal",
+            "employment",
+            "income",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "consent": []
+        }
+    },
+    "loans": {
+        "name": "loans",
+        "description": "Kredite Antrag",
+        "singleApplicant": true,
+        "consent": "form.loans.consent",
+        "required": [
+            "personal",
+            "employment",
+            "income",
+            "expenses",
+            "assets",
+            "liabilities",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "expenses": [],
+            "assets": [],
+            "liabilities": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "employment": [],
+            "income": [],
+            "expenses": [],
+            "assets": [],
+            "liabilities": [],
+            "consent": []
+        }
+    },
+    "electricity": {
+        "name": "electricity",
+        "description": "Strom Antrag",
+        "singleApplicant": true,
+        "consent": "form.electricity.consent",
+        "required": [
+            "personal",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "consent": []
+        }
+    },
+    "sanuspay": {
+        "name": "sanuspay",
+        "description": "Sanuspay Antrag",
+        "singleApplicant": true,
+        "consent": "form.sanuspay.consent",
+        "required": [
+            "personal",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "consent": []
+        }
+    },
+    "gems": {
+        "name": "gems",
+        "description": "Gems Antrag",
+        "singleApplicant": true,
+        "consent": "form.gems.consent",
+        "required": [
+            "personal",
+            "consent"
+        ],
+        "ignore": {
+            "personal": [],
+            "consent": []
+        },
+        "additional": {
+            "personal": [],
+            "consent": []
+        }
+    }
+}

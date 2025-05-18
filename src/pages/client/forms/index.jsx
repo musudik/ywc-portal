@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
+import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/dashboard/layout";
 import { useAuth } from "../../../contexts/AuthContext";
 import { profileApi } from "../../../api";
@@ -60,6 +61,7 @@ const CreateIcon = () => (
 const ClientForms = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -119,9 +121,16 @@ const ClientForms = () => {
       });
   };
 
-  const handleCreateForm = (formType) => {
-    // In a real app, this would create a new form
-    alert(`Creating a new ${formType.name} form...`);
+  const handleCreateForm = (form) => {
+    // Navigate to the appropriate form page based on form type
+    switch(form.id) {
+      case "immobilien":
+        navigate("/client/forms/immobilien");
+        break;
+      default:
+        alert(`Creating a new ${form.name} form... (Not yet implemented)`);
+        break;
+    }
   };
 
   const handleViewForm = (form) => {

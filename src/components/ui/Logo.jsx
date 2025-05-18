@@ -2,7 +2,7 @@ import React from "react";
 import logoGif from "../../assets/YWC.gif";
 
 // Modern YWC Logo using GIF
-const Logo = ({ width = 40, height = 40, className = "" }) => (
+const Logo = ({ width = 100, height = 100, className = "" }) => (
   <img 
     src={logoGif} 
     alt="YourWealth.Coach Logo" 

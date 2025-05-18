@@ -34,7 +34,6 @@ i18n
       lookupLocalStorage: 'i18nextLng',
     },
     nsSeparator: false,
-    keySeparator: false,
     saveMissing: false, // Don't attempt to save missing translations
     react: {
       useSuspense: false // Disable suspense which can cause issues

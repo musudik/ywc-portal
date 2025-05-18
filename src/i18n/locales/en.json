@@ -82,6 +82,92 @@
     "update": "Update",
     "actions": "Actions"
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your preferences and account settings",
+    "appearance": {
+      "title": "Appearance Settings",
+      "description": "Customize the look and feel of the application",
+      "theme": "Theme",
+      "themeDescription": "Choose between light and dark modes",
+      "lightMode": "Light Mode",
+      "darkMode": "Dark Mode",
+      "colorScheme": "Color Scheme"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Control how you receive notifications",
+      "emailNotifications": "Email Notifications",
+      "emailDescription": "Receive notifications via email",
+      "pushNotifications": "Push Notifications",
+      "pushDescription": "Receive notifications in browser",
+      "marketingEmails": "Marketing Emails",
+      "marketingDescription": "Receive marketing and promotional emails",
+      "systemUpdates": "System Updates",
+      "systemDescription": "Receive notifications about system updates"
+    },
+    "privacy": {
+      "title": "Privacy Settings",
+      "description": "Manage your privacy preferences",
+      "profileVisibility": "Profile Visibility",
+      "profileDescription": "Control who can see your profile information",
+      "everyone": "Everyone",
+      "onlyCoaches": "Only My Coaches",
+      "private": "Private",
+      "dataSharing": "Data Sharing",
+      "dataSharingDescription": "Allow sharing anonymized data for service improvement",
+      "activityTracking": "Activity Tracking",
+      "activityDescription": "Track your activity for personalized recommendations",
+      "requestExport": "Request Data Export"
+    },
+    "language": {
+      "title": "Language Settings",
+      "description": "Change your language preferences",
+      "interfaceLanguage": "Interface Language",
+      "interfaceDescription": "Change the language of the user interface",
+      "dateFormat": "Date Format",
+      "dateFormatDescription": "Choose your preferred date format"
+    },
+    "accessibility": {
+      "title": "Accessibility Settings",
+      "description": "Adjust settings for better accessibility",
+      "highContrast": "High Contrast",
+      "contrastDescription": "Increase contrast for better visibility",
+      "reducedMotion": "Reduced Motion",
+      "motionDescription": "Minimize animations throughout the interface",
+      "fontSize": "Font Size",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "account": {
+      "title": "Account Settings",
+      "description": "Manage your account details",
+      "personalInfo": "Personal Information",
+      "email": "Email",
+      "phoneNumber": "Phone Number",
+      "saveChanges": "Save Changes",
+      "accountManagement": "Account Management",
+      "changePassword": "Change Password",
+      "deactivateAccount": "Deactivate Account",
+      "deleteAccount": "Delete Account"
+    },
+    "security": {
+      "title": "Security Settings",
+      "description": "Configure security settings",
+      "twoFactor": "Two-Factor Authentication",
+      "twoFactorDescription": "Add an extra layer of security to your account",
+      "loginSessions": "Login Sessions",
+      "currentSession": "Current Session",
+      "active": "Active",
+      "logoutDevices": "Log Out All Other Devices",
+      "activityLog": "Activity Log",
+      "passwordChanged": "Password changed",
+      "loginNewDevice": "Login from new device",
+      "profileUpdated": "Profile updated",
+      "viewLog": "View Full Activity Log"
+    }
+  },
   "profile": {
     "header": {
       "title": "Profile Setup"
@@ -247,23 +333,52 @@
         "medium": "Medium",
         "medium-high": "Medium-High",
         "high": "High"
-      },
-      "investmentHorizonLabel": "Investment Horizon",
-      "investmentHorizonOptions": {
-        "short-term": "Short-Term",
-        "medium-term": "Medium-Term",
-        "long-term": "Long-Term"
-      },
-      "knowledgeExperienceLabel": "Knowledge and Experience",
-      "knowledgeExperience": {
-        "none": "None",
-        "basic": "Basic",
-        "intermediate": "Intermediate",
-        "advanced": "Advanced"
-      },
-      "healthInsurance": "Health Insurance",
-      "healthInsuranceNumber": "Health Insurance Number",
-      "healthInsuranceProof": "Health Insurance Proof"
+      }
+    }
+  },
+  "form": {
+    "consent": "Consent",
+    "immobilien": {
+      "title": "Immobilien Form",
+      "description": "Real Estate Application",
+      "consent": "By providing your data, you agree to its use for the following purposes: responding to your inquiries, providing information about properties, and sending you newsletters. You have the right to withdraw your consent at any time. You also have the right to access, rectify, erase, and port your data. By signing below, I give my consent to the use of my data as described above."
+    },
+    "privateHealthInsurance": {
+      "consent": "I hereby consent to the collection, use, and sharing of my personal data with health insurance companies for the purposes of managing my health insurance policy, including billing, claims processing, and providing information about my policy. This data may include my name, address, date of birth, medical history, and other relevant information. I understand that my data may be shared with doctors, hospitals, pharmacies, and other service providers as necessary to process my claims and provide me with services. I also understand that I have the right to revoke my consent at any time. I am aware that revoking my consent may affect my ability to receive certain services. I have read and understand this consent form and agree to its terms."
+    },
+    "stateHealthInsurance": {
+      "consent": "I consent to the processing of my personal data by state health insurance providers for the purpose of evaluating insurance eligibility, processing claims, and administering benefits. My information may be shared with healthcare providers, government agencies, and other entities as required by law. I understand that I have the right to access, correct, or delete my personal data, and that I can withdraw this consent at any time, though this may affect the services I receive. I confirm that all information provided is accurate and complete."
+    },
+    "kfz": {
+      "consent": "I hereby authorize the collection and processing of my personal and vehicle data for the purpose of obtaining auto insurance quotes and policies. This includes my contact information, driving history, vehicle details, and payment information. I understand this data may be shared with insurance companies, claims adjusters, and repair services when necessary. I acknowledge that I can withdraw this consent at any time, though this may affect services related to my insurance policy. I confirm that the information provided is truthful and accurate."
+    },
+    "loans": {
+      "consent": "I authorize the collection, use, and disclosure of my financial and personal information for the purpose of assessing my loan application, determining creditworthiness, and administering any resulting loan agreement. This includes checking my credit history, verifying employment, and sharing information with relevant financial institutions. I understand that my data will be retained as required by law and that I have the right to access, correct, and request deletion of my information. I acknowledge that refusing consent may result in my loan application not being processed."
+    },
+    "electricity": {
+      "consent": "I authorize the collection and processing of my personal data, including contact information, payment details, and energy consumption patterns for the purpose of electricity supply services. This data may be used for billing, service improvement, and regulatory compliance. I understand that my information may be shared with grid operators, payment processors, and regulatory authorities when necessary. I acknowledge my right to access, correct, and request deletion of my personal data, and I understand that I can withdraw this consent, though this may affect the services I receive."
+    },
+    "sanuspay": {
+      "consent": "I consent to SanusPay processing my personal and payment information for health payment services, including facilitating payments to healthcare providers, processing claims, and managing my health payment account. My information may be shared with healthcare providers, insurance companies, and payment processors as necessary to provide these services. I understand that I have the right to access, correct, or delete my personal data at any time, and that I can withdraw this consent, though this may affect my ability to use the service. I confirm all information provided is accurate."
+    },
+    "gems": {
+      "consent": "I authorize the collection and processing of my personal data for investment in gemstones and precious metals, including contact information, investment preferences, and payment details. This information may be used to process purchases, maintain records of investments, and provide updates on market conditions. I understand my data may be shared with custodians, dealers, and regulatory authorities as required. I acknowledge my right to access, correct, and request deletion of my data, and I understand I can withdraw this consent at any time, though this may affect investment services provided to me."
+    },
+    "description": "Please fill out all required information",
+    "date": "Date",
+    "place": "Place",
+    "placePlaceholder": "Enter city/location",
+    "signature": "Signature",
+    "agreeToTerms": "I agree to the terms and conditions described above",
+    "submit": "Submit Form",
+    "submitting": "Submitting form...",
+    "success": "Form submitted successfully!",
+    "errors": {
+      "loadingFailed": "Failed to load form data. Please try again.",
+      "placeRequired": "Please enter the place",
+      "consentRequired": "You must agree to the terms",
+      "signatureRequired": "Please provide your signature",
+      "submissionFailed": "Failed to submit form. Please try again."
     }
   }
 } 
