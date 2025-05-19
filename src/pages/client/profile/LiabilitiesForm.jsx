@@ -31,7 +31,15 @@ const safeStringify = (value) => {
   }
 };
 
-const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
+const LiabilitiesForm = ({ 
+  onComplete, 
+  onBack,
+  personalId,
+  initialData,
+  showPreviousButton,
+  onPrevious,
+  skipApiSave = false 
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -262,12 +270,49 @@ const LiabilitiesForm = ({ onComplete, onBack, personalId, initialData }) => {
   };
 
   // Handle form submission to proceed to next step
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      onComplete();
+      // Prepare data for submission
+      const dataToSubmit = {
+        ...currentLiability,
+        loans: liabilities
+      };
+
+      console.log("Submitting liabilities details:", dataToSubmit);
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for liabilities (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
+
+      let response;
+      
+      // If we already have liabilitiesId, update the existing record
+      if (currentLiability.liabilityId) {
+        console.log(`Updating existing liabilities with liabilitiesId: ${currentLiability.liabilityId}`);
+        response = await profileApi.updateLiabilities(dataToSubmit);
+      } else {
+        // Create new liabilities
+        console.log("Creating new liabilities");
+        response = await profileApi.saveLiabilities(dataToSubmit);
+      }
+
+      console.log("Liabilities saved successfully:", response);
+      
+      // Call the onComplete callback with the response
+      onComplete(response);
     } catch (err) {
       console.error("Failed to proceed:", err);
       setError("Failed to proceed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

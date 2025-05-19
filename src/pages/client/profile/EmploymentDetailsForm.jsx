@@ -6,8 +6,20 @@ import { profileApi } from "../../../api";
 import { createSafeTranslate } from "../../../utils/translationUtils";
 
 // Define constants for dropdown options
-const EMPLOYMENT_TYPE_OPTIONS = ["employed", "selfEmployed", "unemployed", "retired", "student"];
+const EMPLOYMENT_TYPE_OPTIONS = ["employed", "selfEmployed", "unemployed", "retired", "student", "other"];
 const CONTRACT_TYPE_OPTIONS = ["permanent", "temporary", "partTime", "fullTime", "freelance", "other"];
+
+// Helper function to format dates to YYYY-MM-DD format
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  
+  // Check if the date is in ISO format (contains 'T')
+  if (typeof dateString === 'string' && dateString.includes('T')) {
+    return dateString.split('T')[0]; // Extract YYYY-MM-DD part
+  }
+  
+  return dateString;
+};
 
 // Map backend values to form values
 const mapBackendToFormValues = (backendData) => {
@@ -15,14 +27,19 @@ const mapBackendToFormValues = (backendData) => {
   
   const formData = {...backendData};
   
-  // Map employment type
-  if (formData.employmentType === "PrimaryEmployment") {
-    formData.employmentType = "employed";
-  }
+  // // Map employment type
+  // if (formData.employmentType === "PrimaryEmployment") {
+  //   formData.employmentType = "Employed";
+  // }
   
   // Map contract type - capitalize first letter for display
   if (formData.contractType && typeof formData.contractType === 'string') {
     formData.contractType = formData.contractType.toLowerCase();
+  }
+  
+  // Format employedSince date for input field
+  if (formData.employedSince) {
+    formData.employedSince = formatDateForInput(formData.employedSince);
   }
   
   return formData;
@@ -32,10 +49,10 @@ const mapBackendToFormValues = (backendData) => {
 const mapFormToBackendValues = (formData) => {
   const backendData = {...formData};
   
-  // Map employment type
-  if (backendData.employmentType === "employed") {
-    backendData.employmentType = "PrimaryEmployment";
-  }
+  // // Map employment type
+  // if (backendData.employmentType === "employed") {
+  //   backendData.employmentType = "PrimaryEmployment";
+  // }
   
   return backendData;
 };
@@ -47,7 +64,10 @@ const EmploymentDetailsForm = ({
   initialData,
   showUpdateButton,
   onUpdate,
-  profileComplete 
+  profileComplete,
+  showPreviousButton,
+  onPrevious,
+  skipApiSave = false
 }) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
@@ -66,53 +86,117 @@ const EmploymentDetailsForm = ({
   const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Update form data when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      console.log("Setting form data from initialData:", initialData);
-      const mappedData = mapBackendToFormValues(initialData);
-      console.log("Mapped initial data for form:", mappedData);
-      setFormData(prevData => ({
-        ...prevData,
-        ...mappedData,
-        personalId // Ensure personalId is included
-      }));
-      setInitialLoading(false);
-    }
-  }, [initialData, personalId]);
-
-  // Load initial data if available and if initialData prop is not provided
+  // Update personalId in formData if it changes
   useEffect(() => {
     const fetchEmploymentDetails = async () => {
-      if (personalId && !initialData) {
-        try {
-          const details = await profileApi.getEmploymentDetails(personalId);
-          if (details) {
-            const employmentData = Array.isArray(details) && details.length > 0 ? details[0] : details;
-            const mappedData = mapBackendToFormValues(employmentData);
-            console.log("Mapped employment data for form:", mappedData);
-            setFormData(prevData => ({
-              ...prevData,
-              ...mappedData,
-              personalId // Ensure personalId is included
-            }));
-          }
-        } catch (err) {
-          // If 404, it means no employment details exist yet
-          if (err.response?.status !== 404) {
-            console.error("Failed to fetch employment details:", err);
-            setError("Failed to load employment details. Please try again.");
-          }
-        } finally {
-          setInitialLoading(false);
+      if (!personalId) {
+        console.warn("EmploymentDetailsForm: personalId is missing");
+        setInitialLoading(false);
+        return;
+      }
+
+      console.log("EmploymentDetailsForm: Fetching employment details for personalId:", personalId);
+      setInitialLoading(true);
+      
+      try {
+        // Ensure personalId is valid before making the API call
+        if (!personalId || personalId === 'undefined') {
+          throw new Error('Invalid personalId');
         }
-      } else if (!initialData) {
+
+        const details = await profileApi.getEmploymentDetails(personalId);
+        if (details) {
+          const employmentData = Array.isArray(details) && details.length > 0 ? details[0] : details;
+          
+          // Log the date format before mapping
+          if (employmentData?.employedSince) {
+            console.log("Original employedSince format:", employmentData.employedSince);
+          }
+          
+          const mappedData = mapBackendToFormValues(employmentData);
+          console.log("Mapped employment data on personalId update:", mappedData);
+          
+          // Log the date format after mapping
+          if (mappedData?.employedSince) {
+            console.log("Formatted employedSince for input:", mappedData.employedSince);
+          }
+          
+          setFormData(prevData => ({
+            ...prevData,
+            ...mappedData,
+            personalId // Ensure personalId is included
+          }));
+          
+          // Check if data is complete to determine mode
+          if (employmentData && employmentData.employmentId) {
+            setIsUpdateMode(true);
+          }
+        }
+      } catch (err) {
+        // If 404, it means no employment details exist yet
+        if (err.response?.status !== 404) {
+          console.error("Failed to fetch employment details on personalId update:", err);
+          setError(safeTranslate("profile.fetchError", "Failed to load employment details. Please try again."));
+        }
+      } finally {
         setInitialLoading(false);
       }
     };
 
-    fetchEmploymentDetails();
-  }, []);
+    // Only fetch if we have a valid personalId and no initialData
+    if (personalId && personalId !== 'undefined' && !initialData) {
+      fetchEmploymentDetails();
+    } else if (personalId && personalId !== 'undefined') {
+      // If we have initialData, just update the personalId
+      setFormData(prevData => ({
+        ...prevData,
+        personalId
+      }));
+      setInitialLoading(false);
+    } else {
+      setInitialLoading(false);
+    }
+  }, [personalId, initialData]);
+
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      console.log("EmploymentDetailsForm: Received initialData:", initialData);
+      
+      // Log the original date format if present
+      if (initialData.employedSince) {
+        console.log("Original employedSince in initialData:", initialData.employedSince);
+      }
+      
+      const mappedData = mapBackendToFormValues(initialData);
+      console.log("EmploymentDetailsForm: Mapped initial data for form:", mappedData);
+      
+      // Log the formatted date
+      if (mappedData.employedSince) {
+        console.log("Formatted employedSince for form:", mappedData.employedSince);
+      }
+      
+      // Ensure we're setting all needed fields
+      setFormData(prevData => {
+        const updatedData = {
+          ...prevData,
+          ...mappedData,
+          personalId: personalId || mappedData.personalId || prevData.personalId, // Ensure personalId is included
+          employedSince: mappedData.employedSince || prevData.employedSince // Ensure date is properly formatted
+        };
+        console.log("EmploymentDetailsForm: Updated form data:", updatedData);
+        return updatedData;
+      });
+      
+      // If we have employmentId, we're in update mode
+      if (initialData.employmentId) {
+        console.log("EmploymentDetailsForm: Setting to update mode with employmentId:", initialData.employmentId);
+        setIsUpdateMode(true);
+      }
+      
+      setInitialLoading(false);
+    }
+  }, [initialData, personalId]);
 
   // Check form completion status and set update mode accordingly
   useEffect(() => {
@@ -131,77 +215,42 @@ const EmploymentDetailsForm = ({
       errors.occupation = safeTranslate('validation.required', 'This field is required');
     }
     
-    if (formData.employmentType === "employed") {
-      if (!formData.employerName.trim()) {
-        errors.employerName = safeTranslate('validation.required', 'This field is required');
-      }
-      
-      if (!formData.contractType) {
-        errors.contractType = safeTranslate('validation.selectRequired', 'Please select an option');
-      }
-      
-      if (!formData.employedSince) {
-        errors.employedSince = safeTranslate('validation.dateRequired', 'Please select a date');
-      }
+    if (!formData.employerName.trim()) {
+      errors.employerName = safeTranslate('validation.required', 'This field is required');
+    }
+    
+    if (!formData.contractType) {
+      errors.contractType = safeTranslate('validation.selectRequired', 'Please select an option');
+    }
+    
+    if (!formData.employedSince) {
+      errors.employedSince = safeTranslate('validation.dateRequired', 'Please select a date');
     }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Update personalId in formData if it changes
-  useEffect(() => {
-    if (personalId) {
-      console.log("EmploymentDetailsForm: personalId updated to", personalId);
-      setFormData(prevData => ({
-        ...prevData,
-        personalId
-      }));
-      
-      // If we now have a personalId and we're not in initial loading, try to fetch employment details again
-      if (!initialLoading && !initialData) {
-        const fetchEmploymentDetails = async () => {
-          try {
-            const details = await profileApi.getEmploymentDetails(personalId);
-            if (details) {
-              const employmentData = Array.isArray(details) && details.length > 0 ? details[0] : details;
-              const mappedData = mapBackendToFormValues(employmentData);
-              console.log("Mapped employment data on personalId update:", mappedData);
-              setFormData(prevData => ({
-                ...prevData,
-                ...mappedData,
-                personalId // Ensure personalId is included
-              }));
-              
-              // Check if data is complete to determine mode
-              if (employmentData && employmentData.employmentId) {
-                setIsUpdateMode(true);
-              }
-            }
-          } catch (err) {
-            // If 404, it means no employment details exist yet
-            if (err.response?.status !== 404) {
-              console.error("Failed to fetch employment details on personalId update:", err);
-            }
-          }
-        };
-        
-        fetchEmploymentDetails();
-      }
-    } else {
-      console.warn("EmploymentDetailsForm: personalId is missing");
-      // Even if personalId is missing, we should still initialize the form
-      setInitialLoading(false);
-    }
-  }, [personalId, initialLoading, initialData]);
-
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    
+    // Handle date formatting specifically for employedSince field
+    if (name === 'employedSince') {
+      const formattedDate = formatDateForInput(value);
+      console.log(`Formatting date from ${value} to ${formattedDate}`);
+      
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: formattedDate
+      }));
+    } else {
+      // For other fields, just set the value directly
+      setFormData(prevData => ({
+        ...prevData,
+        [name]: value
+      }));
+    }
   };
 
   // Handle employment type change
@@ -231,34 +280,44 @@ const EmploymentDetailsForm = ({
       return;
     }
 
-    try {
-      // Ensure personalId is included in the submission data
-      if (!personalId) {
-        throw new Error(safeTranslate('profile.employment.personalIdMissing', 'Personal ID is required but not available'));
-      }
+    // Ensure we have a valid personalId
+    if (!personalId) {
+      setError(safeTranslate('profile.personalIdMissing', 'Personal ID is missing. Please try again.'));
+      setLoading(false);
+      return;
+    }
 
-      // Prepare data for submission - map form values back to what backend expects
-      const dataToSubmit = mapFormToBackendValues({
+    try {
+      // Prepare data for submission
+      const dataToSubmit = {
         ...formData,
-        personalId
-      });
-      
-      console.log("Original form data:", formData);
-      console.log("Mapped data for backend submission:", dataToSubmit);
+        personalId: personalId // Ensure we use the prop personalId, not from formData
+      };
 
       console.log("Submitting employment details:", dataToSubmit);
 
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for employment details (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
+
       let response;
-      if (isUpdateMode && formData.employmentId) {
-        // UPDATE mode - use UPDATE API
-        console.log("UPDATE mode: Updating existing employment details");
+      
+      // If we already have employmentId, update the existing record
+      if (formData.employmentId) {
+        console.log(`Updating existing employment details with employmentId: ${formData.employmentId}`);
         response = await profileApi.updateEmploymentDetails(dataToSubmit);
       } else {
-        // CREATE mode - use POST API
-        console.log("CREATE mode: Creating new employment details");
+        // Create new employment details
+        console.log("Creating new employment details");
         response = await profileApi.saveEmploymentDetails(dataToSubmit);
       }
 
+      console.log("Employment details saved successfully:", response);
+      
       // Call the onComplete callback with the response
       onComplete(response);
     } catch (err) {
@@ -390,7 +449,7 @@ const EmploymentDetailsForm = ({
           )}
         </div>
 
-        {formData.employmentType === "employed" && (
+        {(
           <>
             <div className="space-y-2">
               <label htmlFor="employerName" className="block text-sm font-medium">
@@ -465,7 +524,7 @@ const EmploymentDetailsForm = ({
                 value={formData.employedSince}
                 onChange={handleChange}
                 className={validationErrors.employedSince ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
-                required={formData.employmentType === "employed"}
+                required={formData.employmentType === "Employed"}
               />
               {validationErrors.employedSince && (
                 <p className="text-sm text-red-500 mt-1">{validationErrors.employedSince}</p>

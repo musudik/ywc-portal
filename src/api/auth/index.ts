@@ -29,22 +29,42 @@ api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn(`No token available for request to ${config.url}`);
   }
   return config;
+}, (error) => {
+  console.error('Error in request interceptor:', error);
+  return Promise.reject(error);
 });
 
 // Handle 401 responses (unauthorized)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Logout on 401 unauthorized responses (token expired or invalid)
-    if (error.response && error.response.status === 401) {
-      // Clear the auth data without calling our own logout function
-      // to avoid circular dependencies
-      clearAuthData();
-      // Dispatch event to notify other parts of the app
-      window.dispatchEvent(new Event('auth:logout'));
+    if (error.response) {
+      console.log(`API error: ${error.response.status} on ${error.config.url}`);
+      
+      // Handle unauthorized errors
+      if (error.response.status === 401) {
+        // Dispatch unauthorized event to notify app to attempt token refresh
+        window.dispatchEvent(new Event('auth:unauthorized'));
+        
+        // If this was already the refresh token endpoint, clear auth data
+        if (error.config.url.includes('/refresh-token')) {
+          console.warn('Token refresh failed, logging out');
+          clearAuthData();
+          window.dispatchEvent(new Event('auth:logout'));
+        }
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from server:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error setting up request:', error.message);
     }
+    
     return Promise.reject(error);
   }
 );
@@ -65,11 +85,47 @@ export const authApi = {
     return response.data;
   },
 
+  // Refresh token
+  refreshToken: async (): Promise<AuthResponse> => {
+    try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('No token available for refresh');
+      }
+      
+      const response = await api.post('/refresh-token');
+      
+      // Save the new token data
+      if (response.data && response.data.token) {
+        saveAuthData(
+          response.data.token, 
+          response.data.user, 
+          response.data.expiresIn || '24h'
+        );
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      clearAuthData();
+      throw error;
+    }
+  },
+
   // Logout user - just a helper to clear token from storage
   logout: (): void => {
-    clearAuthData();
-    // Dispatch event to notify other parts of the app
-    window.dispatchEvent(new Event('auth:logout'));
+    try {
+      // Try to call the logout endpoint
+      api.post('/logout').catch(() => {
+        // Ignore errors - we're logging out anyway
+      });
+    } catch (e) {
+      console.error('Error calling logout endpoint:', e);
+    } finally {
+      clearAuthData();
+      // Dispatch event to notify other parts of the app
+      window.dispatchEvent(new Event('auth:logout'));
+    }
   },
 
   // Get current user

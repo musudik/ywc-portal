@@ -5,11 +5,12 @@ export enum ApplicantType {
 }
 
 export enum EmploymentType {
-  EMPLOYED = 'PrimaryEmployment',
-  SELF_EMPLOYED = 'SelfEmployed',
-  UNEMPLOYED = 'Unemployed',
-  RETIRED = 'Retired',
-  STUDENT = 'Student'
+  EMPLOYED = 'employed',
+  SELF_EMPLOYED = 'selfEmployed',
+  UNEMPLOYED = 'unemployed',
+  RETIRED = 'retired',
+  STUDENT = 'student',
+  OTHER = 'other'
 }
 
 export enum LoanType {

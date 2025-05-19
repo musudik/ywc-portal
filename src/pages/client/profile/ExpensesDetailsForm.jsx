@@ -4,7 +4,15 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
-const ExpensesDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
+const ExpensesDetailsForm = ({ 
+  onComplete, 
+  onBack,
+  personalId,
+  initialData,
+  showPreviousButton,
+  onPrevious,
+  skipApiSave = false 
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -94,19 +102,33 @@ const ExpensesDetailsForm = ({ onComplete, onBack, personalId, initialData }) =>
     try {
       // Prepare data for submission
       const dataToSubmit = {
-        ...formData,
-        personalId
+        ...formData
       };
 
+      console.log("Submitting expenses details:", dataToSubmit);
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for expenses details (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
+
       let response;
+      
+      // If we already have expensesId, update the existing record
       if (formData.expensesId) {
-        // Update existing expenses details
+        console.log(`Updating existing expenses with expensesId: ${formData.expensesId}`);
         response = await profileApi.updateExpensesDetails(dataToSubmit);
       } else {
         // Create new expenses details
+        console.log("Creating new expenses details");
         response = await profileApi.saveExpensesDetails(dataToSubmit);
       }
 
+      console.log("Expenses details saved successfully:", response);
+      
       // Call the onComplete callback with the response
       onComplete(response);
     } catch (err) {

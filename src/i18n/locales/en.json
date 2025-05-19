@@ -230,21 +230,22 @@
       "description": "Please provide your employment information.",
       "employmentTypeLabel": "Employment Type",
       "employmentType": {
-        "employed": "Employed",
-        "selfEmployed": "Self-Employed",
-        "unemployed": "Unemployed",
-        "retired": "Retired",
-        "student": "Student"
+        "employed": "employed",
+        "selfEmployed": "selfEmployed",
+        "unemployed": "unemployed",
+        "retired": "retired",
+        "student": "student",
+        "other": "other"
       },
       "occupation": "Occupation",
       "contractTypeLabel": "Contract Type",
       "contractType": {
-        "permanent": "Permanent",
-        "temporary": "Temporary",
-        "partTime": "Part-Time",
-        "fullTime": "Full-Time",
-        "freelance": "Freelance",
-        "other": "Other"
+        "permanent": "permanent",
+        "temporary": "temporary",
+        "partTime": "partTime",
+        "fullTime": "fullTime",
+        "freelance": "freelance",
+        "other": "other"
       },
       "contractDuration": "Contract Duration",
       "contractDurationPlaceholder": "e.g., 1 year, indefinite",

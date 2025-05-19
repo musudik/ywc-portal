@@ -4,7 +4,15 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
-const AssetsForm = ({ onComplete, onBack, personalId, initialData }) => {
+const AssetsForm = ({ 
+  onComplete, 
+  onBack,
+  personalId,
+  initialData,
+  showPreviousButton,
+  onPrevious,
+  skipApiSave = false 
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -91,19 +99,33 @@ const AssetsForm = ({ onComplete, onBack, personalId, initialData }) => {
     try {
       // Prepare data for submission
       const dataToSubmit = {
-        ...formData,
-        personalId
+        ...formData
       };
 
+      console.log("Submitting assets details:", dataToSubmit);
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for assets (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
+
       let response;
-      if (formData.assetId) {
-        // Update existing assets
+      
+      // If we already have assetsId, update the existing record
+      if (formData.assetsId) {
+        console.log(`Updating existing assets with assetsId: ${formData.assetsId}`);
         response = await profileApi.updateAssets(dataToSubmit);
       } else {
         // Create new assets
+        console.log("Creating new assets");
         response = await profileApi.saveAssets(dataToSubmit);
       }
 
+      console.log("Assets saved successfully:", response);
+      
       // Call the onComplete callback with the response
       onComplete(response);
     } catch (err) {

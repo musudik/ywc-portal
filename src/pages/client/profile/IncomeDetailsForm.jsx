@@ -4,7 +4,15 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 
-const IncomeDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
+const IncomeDetailsForm = ({ 
+  onComplete, 
+  onBack,
+  personalId,
+  initialData,
+  showPreviousButton,
+  onPrevious,
+  skipApiSave = false
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -88,19 +96,33 @@ const IncomeDetailsForm = ({ onComplete, onBack, personalId, initialData }) => {
     try {
       // Prepare data for submission
       const dataToSubmit = {
-        ...formData,
-        personalId
+        ...formData
       };
 
+      console.log("Submitting income details:", dataToSubmit);
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for income details (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
+
       let response;
+      
+      // If we already have incomeId, update the existing record
       if (formData.incomeId) {
-        // Update existing income details
+        console.log(`Updating existing income details with incomeId: ${formData.incomeId}`);
         response = await profileApi.updateIncomeDetails(dataToSubmit);
       } else {
         // Create new income details
+        console.log("Creating new income details");
         response = await profileApi.saveIncomeDetails(dataToSubmit);
       }
 
+      console.log("Income details saved successfully:", response);
+      
       // Call the onComplete callback with the response
       onComplete(response);
     } catch (err) {

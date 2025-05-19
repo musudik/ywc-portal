@@ -49,8 +49,13 @@ api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn(`API request to ${config.url} has no authorization token`);
   }
   return config;
+}, (error) => {
+  console.error('Error in profile API request interceptor:', error);
+  return Promise.reject(error);
 });
 
 // Add token to business API requests
@@ -58,9 +63,48 @@ businessApi.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn(`Business API request to ${config.url} has no authorization token`);
   }
   return config;
+}, (error) => {
+  console.error('Error in business API request interceptor:', error);
+  return Promise.reject(error);
 });
+
+// Handle unauthorized responses in API
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.log(`Profile API error: ${error.response.status} on ${error.config.url}`);
+      
+      // Handle unauthorized errors
+      if (error.response.status === 401 || error.response.status === 403) {
+        // Trigger authentication refresh
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Handle unauthorized responses in Business API
+businessApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      console.log(`Business API error: ${error.response.status} on ${error.config.url}`);
+      
+      // Handle unauthorized errors
+      if (error.response.status === 401 || error.response.status === 403) {
+        // Trigger authentication refresh
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface ProfileDetails extends User {
   joinedDate?: string;
@@ -157,8 +201,31 @@ export const profileApi = {
 
   // Employment Details
   getEmploymentDetails: async (personalId: string): Promise<EmploymentDetailsInput> => {
-    const response = await businessApi.get(`/client-data/employment/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching employment details for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/employment/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Employment details API raw response:", response);
+      
+      // Handle the response as an array and return the first item
+      const data = response.data;
+      if (Array.isArray(data)) {
+        if (data.length > 0) {
+          console.log("Employment details received as array, returning first item:", data[0]);
+          return data[0];
+        } else {
+          console.log("Employment details array is empty");
+          throw new Error("No employment details found");
+        }
+      }
+      
+      console.log("Employment details received as object:", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employment details:", error);
+      throw error;
+    }
   },
 
   saveEmploymentDetails: async (data: EmploymentDetailsInput): Promise<EmploymentDetailsInput> => {

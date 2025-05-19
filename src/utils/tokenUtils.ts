@@ -23,20 +23,41 @@ export const saveAuthData = (token: string, user: User, expiresIn: string): void
  * Get the stored auth token
  */
 export const getToken = (): string | null => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const expiry = localStorage.getItem(EXPIRY_KEY);
-  
-  // Check if token is expired
-  if (token && expiry) {
-    const expiryTime = new Date(expiry);
-    if (expiryTime < new Date()) {
-      // Token expired, clear auth data
-      clearAuthData();
+  try {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const expiry = localStorage.getItem(EXPIRY_KEY);
+    
+    // If no token exists, return null
+    if (!token) {
+      console.log('No authentication token found in localStorage');
       return null;
     }
+    
+    // Check if token is expired
+    if (expiry) {
+      const expiryTime = new Date(expiry);
+      const now = new Date();
+      
+      if (expiryTime < now) {
+        // Token expired, clear auth data
+        console.warn(`Token expired at ${expiryTime.toISOString()}, current time is ${now.toISOString()}`);
+        clearAuthData();
+        return null;
+      }
+      
+      // Log remaining time for debugging
+      const remainingMs = expiryTime.getTime() - now.getTime();
+      const remainingMins = Math.round(remainingMs / (1000 * 60));
+      console.log(`Token valid for approximately ${remainingMins} more minutes`);
+    } else {
+      console.warn('Token found but no expiry time is set');
+    }
+    
+    return token;
+  } catch (error) {
+    console.error('Error retrieving authentication token:', error);
+    return null;
   }
-  
-  return token;
 };
 
 /**

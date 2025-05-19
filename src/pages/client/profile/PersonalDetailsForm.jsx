@@ -17,7 +17,8 @@ const PersonalDetailsForm = ({
   id, 
   showUpdateButton, 
   onUpdate, 
-  profileComplete 
+  profileComplete,
+  skipApiSave = false
 }) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
@@ -203,6 +204,14 @@ const PersonalDetailsForm = ({
       };
 
       console.log("Submitting personal details:", dataToSubmit);
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for personal details (used in multi-step form)");
+        onComplete(dataToSubmit);
+        setLoading(false);
+        return;
+      }
 
       let response;
       

@@ -8,6 +8,7 @@ import DashboardLayout from "../../../components/dashboard/layout";
 import { Input } from "../../../components/ui/input";
 import { createSafeTranslate } from "../../../utils/translationUtils";
 import { useNavigate } from "react-router-dom";
+import SignatureCanvas from "../../../components/ui/SignatureCanvas";
 
 // Import form components
 import PersonalDetailsForm from "../profile/PersonalDetailsForm";
@@ -46,22 +47,17 @@ const StepProgress = ({ currentStep, totalSteps, onStepClick }) => {
     { key: 'consent', label: safeTranslate('form.consent', 'Consent') }
   ];
 
-  // Calculate percentage completion
-  const percentage = Math.round((currentStep / (totalSteps - 1)) * 100);
+  // Calculate percentage completion - using current step's 1-indexed value divided by total steps
+  const percentage = Math.round(((currentStep + 1) / totalSteps) * 100);
   
   // Display current step (1-indexed)
   const currentStepDisplay = currentStep + 1;
-  
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">{safeTranslate('form.immobilien.title', 'Immobilien Form')}</h2>
         <span className="text-sm px-3 py-1 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-medium">
-          {safeTranslate('profile.progress.status', 'Step {{current}} of {{total}} ({{percentage}}% Complete)', { 
-            current: currentStepDisplay, 
-            total: totalSteps,
-            percentage
-          })}
+          {`Step ${currentStepDisplay} of ${totalSteps} (${percentage}% Complete)`}
         </span>
       </div>
       <div className="flex w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-6">
@@ -93,92 +89,6 @@ const StepProgress = ({ currentStep, totalSteps, onStepClick }) => {
           );
         })}
       </div>
-    </div>
-  );
-};
-
-// Signature Canvas component for consent form
-const SignatureCanvas = ({ onSignatureChange }) => {
-  const canvasRef = useRef(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [lastX, setLastX] = useState(0);
-  const [lastY, setLastY] = useState(0);
-
-  const startDrawing = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    setIsDrawing(true);
-    setLastX(x);
-    setLastY(y);
-  };
-
-  const draw = (e) => {
-    if (!isDrawing) return;
-    
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#000";
-    
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    
-    setLastX(x);
-    setLastY(y);
-    
-    // Pass the canvas data to parent
-    if (onSignatureChange) {
-      onSignatureChange(canvas.toDataURL());
-    }
-  };
-
-  const endDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Pass empty data to parent
-    if (onSignatureChange) {
-      onSignatureChange("");
-    }
-  };
-
-  return (
-    <div className="mt-4">
-      <div className="border border-gray-300 rounded-md mb-2">
-        <canvas
-          ref={canvasRef}
-          width={400}
-          height={150}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={endDrawing}
-          onMouseOut={endDrawing}
-          className="w-full touch-none"
-        />
-      </div>
-      <Button 
-        type="button" 
-        variant="outline" 
-        onClick={clearCanvas}
-        className="text-sm"
-      >
-        Clear Signature
-      </Button>
     </div>
   );
 };
@@ -272,7 +182,10 @@ const ConsentForm = ({ onComplete, consentText }) => {
         <label className="block text-sm font-medium mb-1">
           {safeTranslate("form.signature", "Signature")}
         </label>
-        <SignatureCanvas onSignatureChange={setSignature} />
+        <SignatureCanvas 
+          onSignatureChange={setSignature}
+          clearButtonText={safeTranslate("form.clearSignature", "Clear Signature")}
+        />
       </div>
       
       <div className="flex items-start mt-4">
@@ -336,6 +249,16 @@ const ImmobilienForm = () => {
     const fetchFormData = async () => {
       setLoading(true);
       try {
+        // Check if user exists and has an ID before making API calls
+        if (!user || !user.id) {
+          console.warn("User ID is missing. Cannot fetch profile data.");
+          setLoading(false);
+          return;
+        }
+        
+        const personalId = user.id;
+        console.log("Fetching form data for user/personalId:", personalId);
+        
         // Fetch data for each required section using the service map
         for (const section of immobilienTemplate.required) {
           if (section === 'consent') continue; // Skip consent as it doesn't have API data
@@ -343,32 +266,51 @@ const ImmobilienForm = () => {
           const serviceName = serviceMap[section];
           if (serviceName && profileApi[serviceName]) {
             try {
-              const data = await profileApi[serviceName]();
+              console.log(`Fetching data for ${section} section using ${serviceName}...`);
+              
+              // Make sure we're passing the personalId to each API call
+              const data = await profileApi[serviceName](personalId);
+              console.log(`Received ${section} data:`, data);
+              
+              // Handle array responses (some APIs might return arrays)
+              const processedData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+              
               // Store the data in the appropriate state variable
               switch (section) {
                 case 'personal':
-                  setPersonalData(data);
+                  console.log('Setting personal data:', processedData);
+                  setPersonalData(processedData);
                   break;
                 case 'employment':
-                  setEmploymentData(data);
+                  console.log('Setting employment data:', processedData);
+                  setEmploymentData(processedData);
                   break;
                 case 'income':
-                  setIncomeData(data);
+                  console.log('Setting income data:', processedData);
+                  setIncomeData(processedData);
                   break;
                 case 'expenses':
-                  setExpensesData(data);
+                  console.log('Setting expenses data:', processedData);
+                  setExpensesData(processedData);
                   break;
                 case 'assets':
-                  setAssetsData(data);
+                  console.log('Setting assets data:', processedData);
+                  setAssetsData(processedData);
                   break;
                 case 'liabilities':
-                  setLiabilitiesData(data);
+                  console.log('Setting liabilities data:', processedData);
+                  setLiabilitiesData(processedData);
                   break;
                 default:
                   break;
               }
             } catch (err) {
-              console.error(`Error fetching ${section} data:`, err);
+              // Provide more detailed error logging
+              if (err.response?.status === 403) {
+                console.error(`Error fetching ${section} data: Access forbidden. PersonalId may be missing or invalid.`);
+              } else {
+                console.error(`Error fetching ${section} data:`, err);
+              }
               // Continue with other sections even if one fails
             }
           }
@@ -382,7 +324,7 @@ const ImmobilienForm = () => {
     };
     
     fetchFormData();
-  }, [immobilienTemplate.required]);
+  }, [immobilienTemplate.required, user]);
   
   // Handle step click for navigation
   const handleStepClick = (stepIndex) => {
@@ -396,10 +338,17 @@ const ImmobilienForm = () => {
   const handleNextStep = (stepData) => {
     // Save the current step's data
     const currentStepName = immobilienTemplate.required[currentStep];
+    
+    // Update formData with the final step data
     setFormData(prev => ({
       ...prev,
-      [currentStepName]: stepData
+      [currentStepName]: {
+        ...(prev[currentStepName] || {}),  // Preserve existing data
+        ...stepData  // Merge with the submitted data
+      }
     }));
+    
+    console.log(`Moving from step ${currentStep} (${currentStepName}) to next step with data:`, stepData);
     
     // Move to the next step
     if (currentStep < totalSteps - 1) {
@@ -419,8 +368,42 @@ const ImmobilienForm = () => {
     // Save consent data
     setConsentData(consentData);
     
+    // Format dates in form data to match yyyy-MM-dd format
+    const formatDates = (data) => {
+      if (!data) return data;
+      
+      // Create a deep copy to avoid modifying original data
+      const formattedData = JSON.parse(JSON.stringify(data));
+      
+      // Process potential date fields in personal data
+      if (formattedData.personal) {
+        if (formattedData.personal.dateOfBirth && formattedData.personal.dateOfBirth.includes('T')) {
+          formattedData.personal.dateOfBirth = formattedData.personal.dateOfBirth.split('T')[0];
+        }
+      }
+      
+      // Process potential date fields in employment data
+      if (formattedData.employment) {
+        if (formattedData.employment.employedSince && formattedData.employment.employedSince.includes('T')) {
+          formattedData.employment.employedSince = formattedData.employment.employedSince.split('T')[0];
+        }
+      }
+      
+      // Format any date in consent data
+      if (formattedData.consent && formattedData.consent.date && formattedData.consent.date.includes('T')) {
+        formattedData.consent.date = formattedData.consent.date.split('T')[0];
+      }
+      
+      // Format submittedAt date
+      if (formattedData.submittedAt && formattedData.submittedAt.includes('T')) {
+        formattedData.submittedAt = formattedData.submittedAt.split('T')[0];
+      }
+      
+      return formattedData;
+    };
+    
     // Compile all form data
-    const completeFormData = {
+    let completeFormData = {
       ...formData,
       consent: consentData,
       userId: user?.id, // Add user ID
@@ -428,10 +411,14 @@ const ImmobilienForm = () => {
       submittedAt: new Date().toISOString()
     };
     
+    // Format all dates
+    completeFormData = formatDates(completeFormData);
+    
     setIsSubmitting(true);
     setError(null);
     
     try {
+      console.log("Submitting form with formatted data:", completeFormData);
       // Submit form data using the forms API
       const response = await formsApi.saveImmobilienForm(completeFormData);
       
@@ -453,9 +440,31 @@ const ImmobilienForm = () => {
     }
   };
   
+  // Function to update formData when fields change
+  const handleFormChange = (stepName, data) => {
+    console.log(`Updating formData for ${stepName}:`, data);
+    setFormData(prev => ({
+      ...prev,
+      [stepName]: data
+    }));
+  };
+  
   // Render the current step form
   const renderStepForm = () => {
     const currentStepName = immobilienTemplate.required[currentStep];
+    // Ensure we have a personalId to pass to form components
+    const personalId = user?.id;
+    
+    // Log current step and available data for debugging
+    console.log(`Rendering form for step: ${currentStepName}`);
+    console.log(`Data available for ${currentStepName}:`, {
+      personal: personalData,
+      employment: employmentData,
+      income: incomeData,
+      expenses: expensesData,
+      assets: assetsData,
+      liabilities: liabilitiesData
+    }[currentStepName]);
     
     switch (currentStepName) {
       case 'personal':
@@ -465,15 +474,25 @@ const ImmobilienForm = () => {
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('personal', data)}
           />
         );
       case 'employment':
+        console.log('Rendering EmploymentDetailsForm with:', {
+          initialData: employmentData,
+          personalId: personalId
+        });
         return (
           <EmploymentDetailsForm 
             initialData={employmentData}
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('employment', data)}
           />
         );
       case 'income':
@@ -483,6 +502,9 @@ const ImmobilienForm = () => {
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('income', data)}
           />
         );
       case 'expenses':
@@ -492,6 +514,9 @@ const ImmobilienForm = () => {
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('expenses', data)}
           />
         );
       case 'assets':
@@ -501,6 +526,9 @@ const ImmobilienForm = () => {
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('assets', data)}
           />
         );
       case 'liabilities':
@@ -510,6 +538,9 @@ const ImmobilienForm = () => {
             onComplete={handleNextStep}
             showPreviousButton={currentStep > 0}
             onPrevious={handlePreviousStep}
+            skipApiSave={true}
+            personalId={personalId}
+            onChange={(data) => handleFormChange('liabilities', data)}
           />
         );
       case 'consent':
