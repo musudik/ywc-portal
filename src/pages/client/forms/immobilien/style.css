@@ -1,0 +1,98 @@
+/* Immobilien Form Styles */
+.immo-form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Form fields styling */
+.immo-form-field {
+  margin-bottom: 16px;
+}
+
+/* Card styling */
+.immo-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .immo-form-container {
+    padding: 0 12px;
+  }
+  
+  /* Adjust the title and controls on mobile */
+  .immo-form-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .immo-form-header > * {
+    margin-bottom: 16px;
+  }
+  
+  /* Make secondary applicant controls stack */
+  .immo-secondary-controls {
+    flex-direction: column;
+    margin-top: 8px;
+  }
+  
+  .immo-secondary-controls > * {
+    margin-bottom: 8px;
+    width: 100%;
+  }
+}
+
+/* Stepper adjustments for small screens */
+@media (max-width: 600px) {
+  .MuiStepper-root {
+    padding: 8px 0;
+  }
+  
+  .MuiStepLabel-label {
+    font-size: 12px;
+  }
+}
+
+/* Spacing for form fields */
+.immo-form-section {
+  padding: 16px;
+}
+
+.immo-form-section-title {
+  margin-bottom: 24px;
+  font-weight: 500;
+  font-size: 18px;
+  color: #1976d2;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+/* Form navigation buttons */
+.immo-form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+  .immo-form-navigation {
+    flex-direction: column;
+  }
+  
+  .immo-form-navigation button {
+    margin-bottom: 12px;
+    width: 100%;
+  }
+  
+  .immo-form-navigation-right {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .immo-form-navigation-right button {
+    width: 100%;
+  }
+} 

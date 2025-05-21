@@ -209,6 +209,19 @@ export const deleteForm = async (formType: string, formId: string): Promise<Form
   }
 };
 
+// Import client forms API
+import clientFormsApi, * as clientForms from './client-forms';
+
+// Export client forms API functions
+export const {
+  createClientForm,
+  getAllClientForms,
+  getClientFormById,
+  updateClientForm,
+  deleteClientForm,
+  updateClientFormStatus
+} = clientForms;
+
 // Export the default object with all form functions
 export default {
   saveImmobilienForm,
@@ -221,5 +234,13 @@ export default {
   saveGemsForm,
   getForms,
   getFormById,
-  deleteForm
+  deleteForm,
+  
+  // Client forms API
+  createClientForm,
+  getAllClientForms,
+  getClientFormById,
+  updateClientForm,
+  deleteClientForm,
+  updateClientFormStatus
 }; 

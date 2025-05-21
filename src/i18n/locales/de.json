@@ -266,12 +266,303 @@
       "healthInsuranceProof": "Krankenversicherungsnachweis"
     }
   },
-  "form": {
+  "forms": {
     "consent": "Einwilligung",
     "immobilien": {
-      "title": "Immobilien Formular",
-      "description": "Immobilien Antrag",
-      "consent": "Durch die Bereitstellung Ihrer Daten stimmen Sie deren Verwendung für folgende Zwecke zu: Beantwortung Ihrer Anfragen, Bereitstellung von Informationen über Immobilien und Zusendung von Newslettern. Sie haben das Recht, Ihre Einwilligung jederzeit zu widerrufen. Sie haben auch das Recht auf Zugang, Berichtigung, Löschung und Übertragung Ihrer Daten. Mit meiner Unterschrift erkläre ich mich mit der Verwendung meiner Daten wie oben beschrieben einverstanden."
+      "title": "Immobilienfinanzierungsantrag",
+      "singleApplicant": "Einzelner Antragsteller",
+      "secondaryPersonalId": "ID des zweiten Antragstellers",
+      "loadSecondary": "Daten laden",
+      "steps": {
+        "personal": "Persönlich",
+        "employment": "Beschäftigung",
+        "income": "Einkommen",
+        "expenses": "Ausgaben",
+        "assets": "Vermögen",
+        "liabilities": "Verbindlichkeiten",
+        "property": "Immobilie",
+        "loan": "Darlehen",
+        "consent": "Einwilligung",
+        "documents": "Dokumente"
+      },
+      "navigation": {
+        "back": "Zurück",
+        "next": "Weiter",
+        "save": "Speichern",
+        "submit": "Antrag einreichen"
+      },
+      "sections": {
+        "personalDetails": {
+          "primaryTitle": "Hauptantragsteller",
+          "secondaryTitle": "Zweiter Antragsteller"
+        },
+        "employmentDetails": {
+          "primaryTitle": "Beschäftigung des Hauptantragstellers",
+          "secondaryTitle": "Beschäftigung des zweiten Antragstellers"
+        },
+        "incomeDetails": {
+          "primaryTitle": "Einkommen des Hauptantragstellers",
+          "secondaryTitle": "Einkommen des zweiten Antragstellers"
+        },
+        "expensesDetails": {
+          "primaryTitle": "Ausgaben des Hauptantragstellers",
+          "secondaryTitle": "Ausgaben des zweiten Antragstellers"
+        },
+        "assets": {
+          "primaryTitle": "Vermögen des Hauptantragstellers",
+          "secondaryTitle": "Vermögen des zweiten Antragstellers"
+        },
+        "liabilities": {
+          "primaryTitle": "Verbindlichkeiten des Hauptantragstellers",
+          "secondaryTitle": "Verbindlichkeiten des zweiten Antragstellers"
+        },
+        "propertyDetails": {
+          "title": "Immobiliendetails"
+        },
+        "loanDetails": {
+          "title": "Darlehensdetails"
+        },
+        "consent": {
+          "title": "Einwilligung und Unterschrift"
+        },
+        "documents": {
+          "title": "Erforderliche Dokumente"
+        }
+      },
+      "fields": {
+        "personal": {
+          "firstName": "Vorname",
+          "lastName": "Nachname",
+          "email": "E-Mail",
+          "phoneNumber": "Telefonnummer",
+          "dateOfBirth": "Geburtsdatum",
+          "address": "Adresse",
+          "city": "Stadt",
+          "postalCode": "Postleitzahl",
+          "country": "Land",
+          "maritalStatus": "Familienstand",
+          "numberOfDependents": "Anzahl der Unterhaltsberechtigten",
+          "nationality": "Nationalität",
+          "birthPlace": "Geburtsort",
+          "identificationNumber": "Ausweisnummer",
+          "coachId": "Coach-ID",
+          "personalId": "Persönliche ID"
+        },
+        "employment": {
+          "employmentType": "Beschäftigungsart",
+          "occupation": "Beruf",
+          "employerName": "Arbeitgeber",
+          "contractType": "Vertragstyp",
+          "contractDuration": "Vertragsdauer",
+          "employedSince": "Beschäftigt seit",
+          "personalId": "Persönliche ID"
+        },
+        "income": {
+          "monthlyNetIncome": "Monatliches Nettoeinkommen",
+          "annualGrossIncome": "Jährliches Bruttoeinkommen",
+          "additionalIncome": "Zusätzliches Einkommen",
+          "additionalIncomeSource": "Quelle des zusätzlichen Einkommens",
+          "rentalIncome": "Mieteinnahmen",
+          "investmentIncome": "Kapitalerträge",
+          "taxClass": "Steuerklasse",
+          "taxId": "Steuer-ID",
+          "numberOfSalaries": "Anzahl der Gehälter pro Jahr",
+          "childBenefit": "Kindergeld",
+          "incomeTradeBusiness": "Einkommen aus Gewerbebetrieb",
+          "incomeSelfEmployedWork": "Einkommen aus selbstständiger Arbeit",
+          "incomeSideJob": "Einkommen aus Nebenjob",
+          "personalId": "Persönliche ID"
+        },
+        "expenses": {
+          "housingExpenses": "Wohnkosten",
+          "utilityBills": "Nebenkosten",
+          "insurancePayments": "Versicherungszahlungen",
+          "transportationCosts": "Transportkosten",
+          "livingExpenses": "Lebenshaltungskosten",
+          "otherExpenses": "Sonstige Ausgaben",
+          "coldRent": "Kaltmiete",
+          "electricity": "Strom",
+          "gas": "Gas",
+          "telecommunication": "Telekommunikation",
+          "accountMaintenanceFee": "Kontoführungsgebühren",
+          "alimony": "Unterhalt",
+          "subscriptions": "Abonnements",
+          "personalId": "Persönliche ID"
+        },
+        "assets": {
+          "cashAndSavings": "Bargeld und Ersparnisse",
+          "investments": "Investitionen",
+          "realEstateProperties": "Immobilien",
+          "vehicles": "Fahrzeuge",
+          "otherAssets": "Sonstige Vermögenswerte",
+          "securities": "Wertpapiere",
+          "bankDeposits": "Bankeinlagen",
+          "buildingSavings": "Bausparverträge",
+          "insuranceValues": "Versicherungswerte",
+          "personalId": "Persönliche ID"
+        },
+        "liabilities": {
+          "loanType": "Kreditart",
+          "loanBank": "Kreditbank",
+          "loanAmount": "Kreditbetrag",
+          "loanMonthlyRate": "Monatliche Rate",
+          "loanInterest": "Zinssatz",
+          "mortgages": "Hypotheken",
+          "carLoans": "Autokredite",
+          "consumerLoans": "Konsumentenkredite",
+          "creditCardDebt": "Kreditkartenschulden",
+          "studentLoans": "Studentendarlehen",
+          "otherLiabilities": "Sonstige Verbindlichkeiten",
+          "personalId": "Persönliche ID"
+        },
+        "property": {
+          "propertyType": "Immobilientyp",
+          "propertyAddress": "Immobilienadresse",
+          "propertyCity": "Stadt der Immobilie",
+          "propertyPostalCode": "PLZ der Immobilie",
+          "propertyPrice": "Immobilienpreis",
+          "constructionYear": "Baujahr",
+          "livingArea": "Wohnfläche",
+          "landArea": "Grundstücksfläche",
+          "numberOfRooms": "Anzahl der Zimmer",
+          "numberOfBathrooms": "Anzahl der Badezimmer"
+        },
+        "loan": {
+          "loanAmount": "Darlehensbetrag",
+          "downPayment": "Anzahlung",
+          "loanTerm": "Laufzeit",
+          "interestRateType": "Zinstyp",
+          "fixedRatePeriod": "Zinsbindungsdauer",
+          "propertyPurpose": "Verwendungszweck"
+        },
+        "consent": {
+          "signature": "Vollständiger Name (als Unterschrift)",
+          "date": "Datum",
+          "place": "Ort",
+          "agreed": "Ich stimme den Allgemeinen Geschäftsbedingungen zu",
+          "signatureHelp": "Bitte geben Sie Ihren vollständigen Namen ein"
+        }
+      },
+      "options": {
+        "maritalStatus": {
+          "single": "Ledig",
+          "married": "Verheiratet",
+          "divorced": "Geschieden",
+          "widowed": "Verwitwet",
+          "separated": "Getrennt"
+        },
+        "country": {
+          "germany": "Deutschland",
+          "austria": "Österreich",
+          "switzerland": "Schweiz"
+        },
+        "employmentType": {
+          "employed": "Angestellt",
+          "selfEmployed": "Selbstständig",
+          "unemployed": "Arbeitslos",
+          "retired": "Im Ruhestand",
+          "student": "Student",
+          "other": "Sonstige"
+        },
+        "contractType": {
+          "permanent": "Unbefristet",
+          "temporary": "Befristet",
+          "partTime": "Teilzeit",
+          "fullTime": "Vollzeit",
+          "freelance": "Freiberuflich",
+          "other": "Sonstige"
+        },
+        "loanType": {
+          "mortgage": "Hypothek",
+          "consumer": "Konsumentenkredit",
+          "car": "Autokredit",
+          "student": "Studentendarlehen",
+          "creditCard": "Kreditkarte",
+          "other": "Sonstige"
+        },
+        "propertyType": {
+          "singleFamilyHouse": "Einfamilienhaus",
+          "apartment": "Wohnung",
+          "townhouse": "Reihenhaus",
+          "duplex": "Doppelhaushälfte",
+          "multifamilyHouse": "Mehrfamilienhaus",
+          "vacationHome": "Ferienhaus",
+          "land": "Grundstück",
+          "commercial": "Gewerbeimmobilie",
+          "other": "Sonstige"
+        },
+        "loanTerm": {
+          "5years": "5 Jahre",
+          "10years": "10 Jahre",
+          "15years": "15 Jahre",
+          "20years": "20 Jahre",
+          "25years": "25 Jahre",
+          "30years": "30 Jahre",
+          "35years": "35 Jahre",
+          "40years": "40 Jahre"
+        },
+        "interestRateType": {
+          "fixed": "Fest",
+          "variable": "Variabel",
+          "mixed": "Gemischt"
+        },
+        "fixedRatePeriod": {
+          "1year": "1 Jahr",
+          "2years": "2 Jahre",
+          "3years": "3 Jahre",
+          "5years": "5 Jahre",
+          "7years": "7 Jahre",
+          "10years": "10 Jahre",
+          "15years": "15 Jahre",
+          "20years": "20 Jahre",
+          "25years": "25 Jahre",
+          "30years": "30 Jahre"
+        },
+        "propertyPurpose": {
+          "primaryResidence": "Hauptwohnsitz",
+          "secondaryHome": "Zweit-/Ferienwohnsitz",
+          "investment": "Kapitalanlage"
+        }
+      },
+      "consent": {
+        "title": "Allgemeine Geschäftsbedingungen",
+        "paragraph1": "Mit dem Absenden dieses Antrags bestätige ich, dass alle angegebenen Informationen nach meinem besten Wissen korrekt und vollständig sind.",
+        "paragraph2": "Ich ermächtige den Kreditgeber, die angegebenen Informationen zu überprüfen und Kreditauskünfte sowie andere Informationen einzuholen, die für die Bearbeitung meines Kreditantrags erforderlich sind.",
+        "paragraph3": "Mir ist bekannt, dass falsche Angaben zur Ablehnung meines Antrags und möglichen rechtlichen Konsequenzen führen können.",
+        "paragraph4": "Ich nehme zur Kenntnis, dass die Einreichung dieses Antrags keine Kreditzusage garantiert."
+      },
+      "documents": {
+        "instruction": "Bitte laden Sie die folgenden Dokumente hoch, um Ihren Antrag zu vervollständigen:",
+        "upload": "Hochladen",
+        "delete": "Löschen",
+        "required": "Erforderlich",
+        "uploadedOn": "Hochgeladen am: {date}",
+        "types": {
+          "idCard": "Personalausweis oder Reisepass",
+          "salarySlips": "Gehaltsabrechnungen (letzte 3 Monate)",
+          "bankStatements": "Kontoauszüge (letzte 3 Monate)",
+          "employmentContract": "Arbeitsvertrag"
+        },
+        "status": {
+          "pending": "Ausstehend",
+          "uploaded": "Hochgeladen",
+          "verified": "Verifiziert",
+          "rejected": "Abgelehnt",
+          "underReview": "In Prüfung"
+        }
+      },
+      "errors": {
+        "loadingFailed": "Formulardaten konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+        "savingFailed": "Formulardaten konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+        "submissionFailed": "Antrag konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
+        "missingPersonalId": "Bitte geben Sie eine persönliche ID für den zweiten Antragsteller ein.",
+        "loadingSecondaryFailed": "Daten des zweiten Antragstellers konnten nicht geladen werden. Bitte überprüfen Sie die persönliche ID und versuchen Sie es erneut."
+      },
+      "success": {
+        "formSaved": "Formulardaten erfolgreich gespeichert.",
+        "formSubmitted": "Antrag erfolgreich eingereicht!",
+        "secondaryApplicantLoaded": "Daten des zweiten Antragstellers erfolgreich geladen."
+      }
     },
     "privateHealthInsurance": {
       "consent": "Hiermit stimme ich der Erhebung, Verwendung und Weitergabe meiner personenbezogenen Daten an Krankenversicherungsunternehmen zum Zwecke der Verwaltung meiner Krankenversicherungspolice zu, einschließlich Abrechnung, Bearbeitung von Ansprüchen und Bereitstellung von Informationen zu meiner Police. Diese Daten können meinen Namen, meine Adresse, mein Geburtsdatum, meine Krankengeschichte und andere relevante Informationen umfassen. Ich verstehe, dass meine Daten mit Ärzten, Krankenhäusern, Apotheken und anderen Dienstleistern geteilt werden können, soweit dies zur Bearbeitung meiner Ansprüche und zur Erbringung von Dienstleistungen erforderlich ist. Ich verstehe auch, dass ich das Recht habe, meine Einwilligung jederzeit zu widerrufen. Mir ist bewusst, dass der Widerruf meiner Einwilligung meine Möglichkeit, bestimmte Dienstleistungen zu erhalten, beeinträchtigen kann. Ich habe dieses Einwilligungsformular gelesen und verstanden und stimme seinen Bedingungen zu."

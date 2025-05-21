@@ -1,0 +1,451 @@
+{
+  "form": {
+    "id": "immobilien",
+    "name": "Immobilien Antrag",
+    "description": "Immobilien financing application form",
+    "status": "active",
+    "formValidity": "2025-12-31",
+    "singleApplicant": true,
+    "steps": [
+      {
+        "name": "personalDetails",
+        "label": "Personal Details",
+        "fields": [
+          {
+            "label": "First Name",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your first name",
+            "reference": "PersonalDetailsForm.firstName"
+          },
+          {
+            "label": "Last Name",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your last name",
+            "reference": "PersonalDetailsForm.lastName"
+          },
+          {
+            "label": "Email",
+            "type": "email",
+            "required": true,
+            "validation": "email",
+            "placeholder": "Enter your email address",
+            "reference": "PersonalDetailsForm.email"
+          },
+          {
+            "label": "Phone Number",
+            "type": "tel",
+            "required": true,
+            "validation": "phone",
+            "placeholder": "Enter your phone number",
+            "reference": "PersonalDetailsForm.phoneNumber"
+          },
+          {
+            "label": "Date of Birth",
+            "type": "date",
+            "required": true,
+            "validation": "date",
+            "reference": "PersonalDetailsForm.dateOfBirth"
+          },
+          {
+            "label": "Address",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your street address",
+            "reference": "PersonalDetailsForm.address"
+          },
+          {
+            "label": "City",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your city",
+            "reference": "PersonalDetailsForm.city"
+          },
+          {
+            "label": "Postal Code",
+            "type": "text",
+            "required": true,
+            "validation": "zipcode",
+            "placeholder": "Enter your postal code",
+            "reference": "PersonalDetailsForm.postalCode"
+          },
+          {
+            "label": "Country",
+            "type": "select",
+            "required": true,
+            "validation": "string",
+            "reference": "PersonalDetailsForm.country",
+            "options": [
+              "Germany",
+              "Austria",
+              "Switzerland",
+              "Other"
+            ]
+          },
+          {
+            "label": "Marital Status",
+            "type": "select",
+            "required": true,
+            "validation": "string",
+            "reference": "PersonalDetailsForm.maritalStatus",
+            "options": [
+              "Single",
+              "Married",
+              "Divorced",
+              "Widowed",
+              "Separated"
+            ]
+          },
+          {
+            "label": "Number of Dependents",
+            "type": "number",
+            "required": true,
+            "validation": "integer",
+            "reference": "PersonalDetailsForm.numberOfDependents"
+          }
+        ]
+      },
+      {
+        "name": "employment",
+        "label": "Employment Details",
+        "fields": [
+          {
+            "label": "Employment Type",
+            "type": "select",
+            "required": true,
+            "validation": "string",
+            "reference": "EmploymentDetailsForm.employmentType",
+            "options": [
+              "employed",
+              "selfEmployed",
+              "unemployed",
+              "retired",
+              "student",
+              "other"
+            ]
+          },
+          {
+            "label": "Occupation",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your job title",
+            "reference": "EmploymentDetailsForm.occupation"
+          },
+          {
+            "label": "Employer Name",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter your employer's name",
+            "reference": "EmploymentDetailsForm.employerName"
+          },
+          {
+            "label": "Contract Type",
+            "type": "select",
+            "required": true,
+            "validation": "string",
+            "reference": "EmploymentDetailsForm.contractType",
+            "options": [
+              "permanent",
+              "temporary",
+              "partTime",
+              "fullTime",
+              "freelance",
+              "other"
+            ]
+          },
+          {
+            "label": "Contract Duration",
+            "type": "text",
+            "required": false,
+            "validation": "string",
+            "placeholder": "e.g., 1 year, indefinite",
+            "reference": "EmploymentDetailsForm.contractDuration"
+          },
+          {
+            "label": "Employed Since",
+            "type": "date",
+            "required": true,
+            "validation": "date",
+            "reference": "EmploymentDetailsForm.employedSince"
+          }
+        ]
+      },
+      {
+        "name": "income",
+        "label": "Income Details",
+        "fields": [
+          {
+            "label": "Monthly Net Income",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your monthly net income",
+            "reference": "IncomeDetailsForm.monthlyNetIncome"
+          },
+          {
+            "label": "Annual Gross Income",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your annual gross income",
+            "reference": "IncomeDetailsForm.annualGrossIncome"
+          },
+          {
+            "label": "Additional Income",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter any additional income",
+            "reference": "IncomeDetailsForm.additionalIncome"
+          },
+          {
+            "label": "Additional Income Source",
+            "type": "text",
+            "required": false,
+            "validation": "string",
+            "placeholder": "Enter source of additional income",
+            "reference": "IncomeDetailsForm.additionalIncomeSource"
+          },
+          {
+            "label": "Rental Income",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter any rental income",
+            "reference": "IncomeDetailsForm.rentalIncome"
+          },
+          {
+            "label": "Investment Income",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter any investment income",
+            "reference": "IncomeDetailsForm.investmentIncome"
+          }
+        ]
+      },
+      {
+        "name": "expenses",
+        "label": "Expenses Details",
+        "fields": [
+          {
+            "label": "Current Housing Expenses",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your current rent/mortgage payment",
+            "reference": "ExpensesDetailsForm.housingExpenses"
+          },
+          {
+            "label": "Utility Bills",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your average monthly utility bills",
+            "reference": "ExpensesDetailsForm.utilityBills"
+          },
+          {
+            "label": "Insurance Payments",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your monthly insurance payments",
+            "reference": "ExpensesDetailsForm.insurancePayments"
+          },
+          {
+            "label": "Transportation Costs",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your monthly transportation costs",
+            "reference": "ExpensesDetailsForm.transportationCosts"
+          },
+          {
+            "label": "Living Expenses",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your monthly living expenses",
+            "reference": "ExpensesDetailsForm.livingExpenses"
+          },
+          {
+            "label": "Other Regular Expenses",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter any other regular expenses",
+            "reference": "ExpensesDetailsForm.otherExpenses"
+          }
+        ]
+      },
+      {
+        "name": "assets",
+        "label": "Assets",
+        "fields": [
+          {
+            "label": "Cash and Savings",
+            "type": "number",
+            "required": true,
+            "validation": "decimal",
+            "placeholder": "Enter your total cash and savings",
+            "reference": "AssetsForm.cashAndSavings"
+          },
+          {
+            "label": "Investments",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter the value of your investments",
+            "reference": "AssetsForm.investments"
+          },
+          {
+            "label": "Real Estate Properties",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter the value of your real estate properties",
+            "reference": "AssetsForm.realEstateProperties"
+          },
+          {
+            "label": "Vehicles",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter the value of your vehicles",
+            "reference": "AssetsForm.vehicles"
+          },
+          {
+            "label": "Other Assets",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter the value of any other assets",
+            "reference": "AssetsForm.otherAssets"
+          }
+        ]
+      },
+      {
+        "name": "liabilities",
+        "label": "Liabilities",
+        "fields": [
+          {
+            "label": "Mortgages",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter your total mortgage debt",
+            "reference": "LiabilitiesForm.mortgages"
+          },
+          {
+            "label": "Car Loans",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter your total car loan debt",
+            "reference": "LiabilitiesForm.carLoans"
+          },
+          {
+            "label": "Consumer Loans",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter your total consumer loan debt",
+            "reference": "LiabilitiesForm.consumerLoans"
+          },
+          {
+            "label": "Credit Card Debt",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter your total credit card debt",
+            "reference": "LiabilitiesForm.creditCardDebt"
+          },
+          {
+            "label": "Student Loans",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter your total student loan debt",
+            "reference": "LiabilitiesForm.studentLoans"
+          },
+          {
+            "label": "Other Liabilities",
+            "type": "number",
+            "required": false,
+            "validation": "decimal",
+            "placeholder": "Enter any other liabilities",
+            "reference": "LiabilitiesForm.otherLiabilities"
+          }
+        ]
+      },
+      {
+        "name": "consent",
+        "label": "Consent",
+        "fields": [
+          {
+            "label": "Signature",
+            "type": "signature",
+            "required": true,
+            "validation": "string",
+            "reference": "ConsentForm.signature"
+          },
+          {
+            "label": "Date",
+            "type": "date",
+            "required": true,
+            "validation": "date",
+            "reference": "ConsentForm.date"
+          },
+          {
+            "label": "Place",
+            "type": "text",
+            "required": true,
+            "validation": "string",
+            "placeholder": "Enter city/location",
+            "reference": "ConsentForm.place"
+          },
+          {
+            "label": "Agreement to Terms",
+            "type": "checkbox",
+            "required": true,
+            "validation": "boolean",
+            "reference": "ConsentForm.agreed"
+          }
+        ]
+      }
+    ],
+    "documents": [
+      {
+        "id": "idCard",
+        "name": "ID Card or Passport",
+        "description": "A copy of your government-issued identification",
+        "required": true
+      },
+      {
+        "id": "salarySlips",
+        "name": "Salary Slips",
+        "description": "Last 3 months of salary slips",
+        "required": true
+      },
+      {
+        "id": "bankStatements",
+        "name": "Bank Statements",
+        "description": "Last 3 months of bank statements",
+        "required": true
+      },
+      {
+        "id": "employmentContract",
+        "name": "Employment Contract",
+        "description": "Current employment contract",
+        "required": true
+      }
+    ]
+  }
+} 

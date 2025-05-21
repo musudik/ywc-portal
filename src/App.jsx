@@ -25,7 +25,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProfileProvider, useProfile } from "./contexts/ProfileContext";
 
 // Import Immobilien form
-import ImmobilienForm from "./pages/client/forms/ImmobilienForm";
+import ImmoForm from "./pages/client/forms/immobilien";
 
 // Protected route component
 const ProtectedRoute = ({ allowedRoles }) => {
@@ -108,7 +108,7 @@ function App() {
                   <Route path="/client/settings/account" element={<AccountSettings />} />
                   <Route path="/client/settings/security" element={<SecuritySettings />} />
                   {/* Form routes */}
-                  <Route path="/client/forms/immobilien" element={<ImmobilienForm />} />
+                  <Route path="/client/forms/immobilien" element={<ImmoForm />} />
                   {/* Other client routes */}
                   <Route path="/client/forms" element={<ClientForms />} />
                 </Route>

@@ -337,12 +337,302 @@
       }
     }
   },
-  "form": {
+  "forms": {
     "consent": "Consent",
     "immobilien": {
-      "title": "Immobilien Form",
-      "description": "Real Estate Application",
-      "consent": "By providing your data, you agree to its use for the following purposes: responding to your inquiries, providing information about properties, and sending you newsletters. You have the right to withdraw your consent at any time. You also have the right to access, rectify, erase, and port your data. By signing below, I give my consent to the use of my data as described above."
+      "title": "Real Estate Financing Application",
+      "singleApplicant": "Single Applicant",
+      "secondaryPersonalId": "Secondary Applicant ID",
+      "loadSecondary": "Load Secondary",
+      "steps": {
+        "personal": "Personal Details",
+        "employment": "Employment",
+        "income": "Income",
+        "expenses": "Expenses",
+        "assets": "Assets",
+        "liabilities": "Liabilities",
+        "property": "Property",
+        "loan": "Loan",
+        "consent": "Consent",
+        "documents": "Documents"
+      },
+      "navigation": {
+        "back": "Back",
+        "next": "Next",
+        "save": "Save",
+        "submit": "Submit"
+      },
+      "sections": {
+        "personalDetails": {
+          "primaryTitle": "Primary Applicant's Personal Details",
+          "secondaryTitle": "Secondary Applicant's Personal Details"
+        },
+        "employmentDetails": {
+          "primaryTitle": "Primary Applicant's Employment Details",
+          "secondaryTitle": "Secondary Applicant's Employment Details"
+        },
+        "incomeDetails": {
+          "primaryTitle": "Primary Applicant's Income Details",
+          "secondaryTitle": "Secondary Applicant's Income Details"
+        },
+        "expensesDetails": {
+          "primaryTitle": "Primary Applicant's Expenses Details",
+          "secondaryTitle": "Secondary Applicant's Expenses Details"
+        },
+        "assets": {
+          "primaryTitle": "Primary Applicant's Assets",
+          "secondaryTitle": "Secondary Applicant's Assets"
+        },
+        "liabilities": {
+          "primaryTitle": "Primary Applicant's Liabilities",
+          "secondaryTitle": "Secondary Applicant's Liabilities"
+        },
+        "propertyDetails": {
+          "title": "Property Details"
+        },
+        "loanDetails": {
+          "title": "Loan Details"
+        },
+        "consent": {
+          "title": "Consent and Signature"
+        },
+        "documents": {
+          "title": "Required Documents"
+        }
+      },
+      "fields": {
+        "personal": {
+          "firstName": "First Name",
+          "lastName": "Last Name",
+          "email": "Email",
+          "phoneNumber": "Phone Number",
+          "dateOfBirth": "Date of Birth",
+          "maritalStatus": "Marital Status",
+          "address": "Address",
+          "city": "City",
+          "postalCode": "Postal Code",
+          "country": "Country",
+          "numberOfDependents": "Number of Dependents",
+          "nationality": "Nationality",
+          "birthPlace": "Birth Place",
+          "identificationNumber": "Identification Number",
+          "coachId": "Coach ID",
+          "personalId": "Personal ID"
+        },
+        "employment": {
+          "employmentType": "Employment Type",
+          "occupation": "Occupation",
+          "contractType": "Contract Type",
+          "contractDuration": "Contract Duration",
+          "employerName": "Employer Name",
+          "employedSince": "Employed Since"
+        },
+        "income": {
+          "monthlyNetIncome": "Monthly Net Income",
+          "annualGrossIncome": "Annual Gross Income",
+          "additionalIncome": "Additional Income",
+          "additionalIncomeSource": "Additional Income Source",
+          "rentalIncome": "Rental Income",
+          "investmentIncome": "Investment Income",
+          "taxClass": "Tax Class",
+          "taxId": "Tax ID",
+          "numberOfSalaries": "Number of Salaries per Year",
+          "childBenefit": "Child Benefit",
+          "incomeTradeBusiness": "Income from Trade/Business",
+          "incomeSelfEmployedWork": "Income from Self-Employed Work",
+          "incomeSideJob": "Income from Side Job",
+          "personalId": "Personal ID"
+        },
+        "expenses": {
+          "housingExpenses": "Housing Expenses",
+          "utilityBills": "Utility Bills",
+          "insurancePayments": "Insurance Payments",
+          "transportationCosts": "Transportation Costs",
+          "livingExpenses": "Living Expenses",
+          "otherExpenses": "Other Expenses",
+          "coldRent": "Cold Rent",
+          "electricity": "Strom",
+          "gas": "Gas",
+          "telecommunication": "Telekommunikation",
+          "accountMaintenanceFee": "Account Maintenance Fee",
+          "alimony": "Alimony",
+          "subscriptions": "Subscriptions",
+          "personalId": "Personal ID"
+        },
+        "assets": {
+          "cashAndSavings": "Cash and Savings",
+          "investments": "Investments",
+          "realEstateProperties": "Real Estate Properties",
+          "vehicles": "Vehicles",
+          "otherAssets": "Other Assets",
+          "securities": "Securities",
+          "bankDeposits": "Bank Deposits",
+          "buildingSavings": "Building Savings",
+          "insuranceValues": "Insurance Values",
+          "personalId": "Personal ID"
+        },
+        "liabilities": {
+          "loanType": "Loan Type",
+          "loanBank": "Loan Bank",
+          "loanAmount": "Loan Amount",
+          "loanMonthlyRate": "Monthly Rate",
+          "loanInterest": "Interest Rate",
+          "mortgages": "Mortgages",
+          "carLoans": "Car Loans",
+          "consumerLoans": "Consumer Loans",
+          "creditCardDebt": "Credit Card Debt",
+          "studentLoans": "Student Loans",
+          "otherLiabilities": "Other Liabilities",
+          "personalId": "Personal ID"
+        },
+        "property": {
+          "propertyType": "Property Type",
+          "propertyAddress": "Property Address",
+          "propertyCity": "Property City",
+          "propertyPostalCode": "Property Postal Code",
+          "propertyPrice": "Property Price",
+          "constructionYear": "Construction Year",
+          "livingArea": "Living Area",
+          "landArea": "Land Area",
+          "numberOfRooms": "Number of Rooms",
+          "numberOfBathrooms": "Number of Bathrooms"
+        },
+        "loan": {
+          "loanAmount": "Loan Amount",
+          "downPayment": "Down Payment",
+          "loanTerm": "Loan Term",
+          "interestRateType": "Interest Rate Type",
+          "fixedRatePeriod": "Fixed Rate Period",
+            "propertyPurpose": "Property Purpose"
+        },
+        "consent": {
+          "signature": "Full Name (as Signature)",
+          "date": "Date",
+          "place": "Place",
+          "agreed": "I agree to the General Terms and Conditions",
+          "signatureHelp": "Please enter your full name"
+        }
+      },
+      "options": {
+        "maritalStatus": {
+          "single": "Single",
+          "married": "Married",
+          "divorced": "Divorced",
+          "widowed": "Widowed",
+          "separated": "Separated"
+        },
+        "country": {
+          "germany": "Germany",
+          "austria": "Austria",
+          "switzerland": "Switzerland"
+        },
+        "employmentType": {
+          "employed": "Employed",
+          "selfEmployed": "Self-Employed",
+          "unemployed": "Unemployed",
+          "retired": "Retired",
+          "student": "Student",
+          "other": "Other"
+        },
+        "contractType": {
+          "permanent": "Permanent",
+          "temporary": "Temporary",
+          "partTime": "Part-Time",
+          "fullTime": "Full-Time",
+          "freelance": "Freelance",
+          "other": "Other"
+        },
+        "loanType": {
+          "mortgage": "Mortgage",
+          "consumer": "Consumer Loan",
+          "car": "Car Loan",
+          "student": "Student Loan",
+          "creditCard": "Credit Card",
+          "other": "Other"
+        },
+        "propertyType": {
+          "singleFamilyHouse": "Single-Family House",
+          "apartment": "Apartment",
+          "townhouse": "Townhouse",
+          "duplex": "Duplex",
+          "multifamilyHouse": "Multi-Family House",
+          "vacationHome": "Vacation Home",
+          "land": "Land",
+          "commercial": "Commercial Property",
+          "other": "Other"
+        },
+        "loanTerm": {
+          "5years": "5 Years",
+          "10years": "10 Years",
+          "15years": "15 Years",
+          "20years": "20 Years",
+          "25years": "25 Years",
+          "30years": "30 Years",
+          "35years": "35 Years",
+          "40years": "40 Years"
+        },
+        "interestRateType": {
+          "fixed": "Fixed",
+          "variable": "Variable",
+          "mixed": "Mixed"
+        },
+        "fixedRatePeriod": {
+          "1year": "1 Year",
+          "2years": "2 Years",
+          "3years": "3 Years",
+          "5years": "5 Years",
+          "7years": "7 Years",
+          "10years": "10 Years",
+          "15years": "15 Years",
+          "20years": "20 Years",
+          "25years": "25 Years",
+          "30years": "30 Years"
+        },
+        "propertyPurpose": {
+          "primaryResidence": "Primary Residence",
+          "secondaryHome": "Secondary/Vacation Home",
+          "investment": "Investment"
+        }
+      },
+      "consent": {
+        "title": "Terms and Conditions",
+        "paragraph1": "By submitting this application, I confirm that all information provided is accurate and complete to the best of my knowledge.",
+        "paragraph2": "I authorize the lender to verify the information provided and to obtain credit reports and other information as necessary for processing my loan application.",
+        "paragraph3": "I understand that providing false information may result in the rejection of my application and possible legal consequences.",
+        "paragraph4": "I acknowledge that submitting this application does not guarantee loan approval."
+      },
+      "documents": {
+        "instruction": "Please upload the following documents to complete your application:",
+        "upload": "Upload",
+        "delete": "Delete",
+        "required": "Required",
+        "uploadedOn": "Uploaded on: {date}",
+        "types": {
+          "idCard": "ID Card or Passport",
+          "salarySlips": "Salary Slips (last 3 months)",
+          "bankStatements": "Bank Statements (last 3 months)",
+          "employmentContract": "Employment Contract"
+        },
+        "status": {
+          "pending": "Pending",
+          "uploaded": "Uploaded",
+          "verified": "Verified",
+          "rejected": "Rejected",
+          "underReview": "Under Review"
+        }
+      },
+      "errors": {
+        "loadingFailed": "Failed to load form data. Please try again.",
+        "savingFailed": "Failed to save form data. Please try again.",
+        "submissionFailed": "Failed to submit application. Please try again.",
+        "missingPersonalId": "Please enter a personal ID for the secondary applicant.",
+        "loadingSecondaryFailed": "Failed to load secondary applicant data. Please check the personal ID and try again."
+      },
+      "success": {
+        "formSaved": "Form data saved successfully.",
+        "formSubmitted": "Application submitted successfully!",
+        "secondaryApplicantLoaded": "Secondary applicant data loaded successfully."
+      }
     },
     "privateHealthInsurance": {
       "consent": "I hereby consent to the collection, use, and sharing of my personal data with health insurance companies for the purposes of managing my health insurance policy, including billing, claims processing, and providing information about my policy. This data may include my name, address, date of birth, medical history, and other relevant information. I understand that my data may be shared with doctors, hospitals, pharmacies, and other service providers as necessary to process my claims and provide me with services. I also understand that I have the right to revoke my consent at any time. I am aware that revoking my consent may affect my ability to receive certain services. I have read and understand this consent form and agree to its terms."

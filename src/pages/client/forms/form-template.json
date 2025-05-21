@@ -1,0 +1,41 @@
+{
+    "form": {
+        "id": "string",
+        "name": "string",
+        "description": "string",
+        "status": "string",
+        "formValidity": "date",
+        "singleApplicant": "boolean",
+        "submittedDate": "date",
+        "submittedBy": "string",
+        "steps": [
+            {
+                "name": "string",
+                "fields": [
+                    {
+                        "label": "string",
+                        "type": "string",
+                        "required": "boolean",
+                        "defaultValue": "string",
+                        "validation": "string",
+                        "placeholder": "string",
+                        "reference": "string",
+                        "options": []
+                    }
+                ]
+            }
+        ],
+        "documents": [
+            {
+                "id": "string",
+                "name": "string",
+                "description": "string",
+                "required": "boolean",
+                "link": "string",
+                "uploaded": "boolean",
+                "uploadDate": "date",
+                "uploadedBy": "string"
+            }
+        ]
+    }
+}

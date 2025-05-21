@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../../components/dashboard/layout";
 import { useAuth } from "../../../contexts/AuthContext";
-import { profileApi } from "../../../api";
+import { profileApi, formsApi } from "../../../api";
 
 // Icons
 const QRCodeIcon = () => (
@@ -58,6 +58,13 @@ const CreateIcon = () => (
   </svg>
 );
 
+const EditIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+
 const ClientForms = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -84,24 +91,53 @@ const ClientForms = () => {
       setLoading(true);
       setError(null);
       try {
-        // In a real app, this would be a call to your API
-        // const response = await profileApi.getForms();
-        // setForms(response);
+        // Call the actual API to get all client forms
+        const response = await formsApi.getAllClientForms();
         
-        // For demonstration, we'll create mock data
-        // In a real implementation, this would be replaced with actual API data
-        const mockForms = formTypes.map(type => ({
-          id: type.id,
-          name: type.name,
-          status: Math.random() > 0.5 ? "filled" : "not_filled",
-          link: `https://yourwealth.coach/forms/${type.id}/${user?.id || 'user123'}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }));
-        
-        setForms(mockForms);
+        if (response.success) {
+          console.log('Fetched forms:', response.data);
+          
+          // Create a map of form types to their corresponding form data
+          const formsMap = {};
+          if (response.data && Array.isArray(response.data)) {
+            response.data.forEach(form => {
+              formsMap[form.formType] = form;
+            });
+          }
+          
+          // Create the final forms array with all form types
+          const formsList = formTypes.map(type => {
+            const existingForm = formsMap[type.id];
+            
+            if (existingForm) {
+              // Form exists, return it with existing data
+              return {
+                ...existingForm,
+                id: type.id,
+                name: type.name,
+                status: "filled",
+                link: `${window.location.origin}/client/forms/${type.id}/${existingForm.formId}`
+              };
+            } else {
+              // Form doesn't exist, return a template
+              return {
+                id: type.id,
+                name: type.name,
+                status: "not_filled",
+                link: `${window.location.origin}/client/forms/${type.id}/new`,
+                formId: null
+              };
+            }
+          });
+          
+          setForms(formsList);
+        } else {
+          // Handle API error
+          console.error("Failed to fetch forms:", response.message);
+          setError(response.message || "Failed to load forms. Please try again later.");
+        }
       } catch (err) {
-        console.error("Failed to fetch forms:", err);
+        console.error("Error fetching forms:", err);
         setError("Failed to load forms. Please try again later.");
       } finally {
         setLoading(false);
@@ -134,16 +170,52 @@ const ClientForms = () => {
   };
 
   const handleViewForm = (form) => {
-    // In a real app, this would navigate to the form view
-    window.open(form.link, '_blank');
+    if (!form.formId) return;
+    
+    // Navigate to view the form
+    navigate(`/client/forms/${form.id}/view/${form.formId}`);
   };
 
-  const handleDeleteForm = (form) => {
-    // In a real app, this would delete the form after confirmation
+  const handleUpdateForm = (form) => {
+    if (!form.formId) return;
+    
+    // Navigate to edit the form
+    navigate(`/client/forms/${form.id}/edit/${form.formId}`);
+  };
+
+  const handleDeleteForm = async (form) => {
+    if (!form.formId) return;
+    
+    // Confirm deletion with the user
     if (window.confirm(`Are you sure you want to delete this ${form.name} form?`)) {
-      alert(`Deleting ${form.name} form...`);
-      // const updatedForms = forms.filter(f => f.id !== form.id);
-      // setForms(updatedForms);
+      setLoading(true);
+      try {
+        const response = await formsApi.deleteClientForm(form.formId);
+        
+        if (response.success) {
+          // Update local state to reflect deletion
+          const updatedForms = forms.map(f => {
+            if (f.id === form.id) {
+              return {
+                ...f,
+                status: "not_filled",
+                formId: null
+              };
+            }
+            return f;
+          });
+          
+          setForms(updatedForms);
+          alert(`${form.name} form deleted successfully.`);
+        } else {
+          alert(`Error: ${response.message || "Failed to delete form"}`);
+        }
+      } catch (err) {
+        console.error("Error deleting form:", err);
+        alert("Failed to delete form. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -245,15 +317,35 @@ const ClientForms = () => {
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center space-x-2">
                             {form.status === "filled" ? (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleViewForm(form)}
-                                title={t("View Form")}
-                                className="text-blue-600"
-                              >
-                                <ViewIcon />
-                              </Button>
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleViewForm(form)}
+                                  title={t("View Form")}
+                                  className="text-blue-600"
+                                >
+                                  <ViewIcon />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleUpdateForm(form)}
+                                  title={t("Edit Form")}
+                                  className="text-amber-600"
+                                >
+                                  <EditIcon />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDeleteForm(form)}
+                                  title={t("Delete Form")}
+                                  className="text-red-600"
+                                >
+                                  <DeleteIcon />
+                                </Button>
+                              </>
                             ) : (
                               <Button 
                                 variant="ghost" 
@@ -263,17 +355,6 @@ const ClientForms = () => {
                                 className="text-green-600"
                               >
                                 <CreateIcon />
-                              </Button>
-                            )}
-                            {form.status === "filled" && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleDeleteForm(form)}
-                                title={t("Delete Form")}
-                                className="text-red-600"
-                              >
-                                <DeleteIcon />
                               </Button>
                             )}
                           </div>
