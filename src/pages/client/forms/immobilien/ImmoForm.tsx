@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Box, Card, CardContent, Grid, Typography, Stepper, Step, StepLabel, Button, 
   FormControlLabel, Checkbox, CircularProgress, TextField, Alert, Snackbar, LinearProgress } from '@mui/material';
 import { ArrowBack, ArrowForward, Save, Send } from '@mui/icons-material';
+import { useParams } from 'react-router-dom';
+
+// Import FormLayout
+import FormLayout from '../../../../components/layouts/FormLayout';
 
 // Import the form data types and functions
 import { 
@@ -83,7 +87,8 @@ const formatDates = (data: any): any => {
   return formattedData;
 };
 
-const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
+const ImmoForm: React.FC = () => {
+  const { id: formId } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -104,13 +109,14 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
           // Load existing form
           const response = await getClientFormById(formId);
           if (response.success && response.data) {
+            console.log('Loaded form data from database:', response.data);
             setFormData(response.data.formData);
             setSingleApplicant(!response.data.formData.secondaryApplicant);
           } else {
             throw new Error(response.message || 'Failed to load form data');
           }
         } else {
-          // Create new form and load primary applicant data
+          // Create new form with empty data
           const newForm = createEmptyImmobilienForm();
           
           try {
@@ -219,6 +225,15 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
 
     setLoading(true);
     try {
+      // If we already have a formId, we should first check if the form already has a secondary applicant
+      if (formId && formData.secondaryApplicant?.personal?.personalId === secondaryPersonalId) {
+        // The secondary applicant is already loaded
+        setSingleApplicant(false);
+        setSuccess(t('forms.immobilien.success.secondaryApplicantAlreadyLoaded'));
+        setLoading(false);
+        return;
+      }
+      
       // Load personal details
       const personalDetails = await profileApi.getPersonalDetails(secondaryPersonalId);
       
@@ -318,6 +333,20 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
         console.log('Secondary liabilities not found, using defaults');
       }
       
+      // Save the updated form if we have a formId
+      if (formId) {
+        const validationResult = validateFormData(updatedFormData, true);
+        if (validationResult.isValid) {
+          const sanitizedData = sanitizeFormData(updatedFormData);
+          const apiData = mapToApiFormat(sanitizedData);
+          
+          const response = await updateClientForm(formId, apiData);
+          if (!response.success) {
+            console.warn('Failed to update form with secondary applicant data');
+          }
+        }
+      }
+      
       setFormData(updatedFormData);
       setSingleApplicant(false);
       setSuccess(t('forms.immobilien.success.secondaryApplicantLoaded'));
@@ -401,8 +430,17 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
         delete formDataToSubmit.secondaryApplicant;
       }
       
+      // For drafts, use a more lenient validation
+      const validationResult = validateFormData(formDataToSubmit, true);
+      if (!validationResult.isValid) {
+        throw new Error(`Invalid form data: ${validationResult.message}`);
+      }
+      
+      // Clean the data to remove any unnecessary fields
+      const sanitizedData = sanitizeFormData(formDataToSubmit);
+      
       // Prepare API data
-      const apiData = mapToApiFormat(formDataToSubmit);
+      const apiData = mapToApiFormat(sanitizedData);
       
       // Create or update form
       let response;
@@ -410,6 +448,10 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
         response = await updateClientForm(formId, apiData);
       } else {
         response = await createClientForm(apiData);
+        // If this is a new form, store the newly created form ID
+        if (response.success && response.data?.id) {
+          window.history.replaceState(null, '', `/client/forms/immobilien/${response.data.id}`);
+        }
       }
       
       if (response.success) {
@@ -441,11 +483,20 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
         delete formDataToSubmit.secondaryApplicant;
       }
       
+      // For submission, use strict validation
+      const validationResult = validateFormData(formDataToSubmit, false);
+      if (!validationResult.isValid) {
+        throw new Error(`Invalid form data: ${validationResult.message}`);
+      }
+      
+      // Clean the data to remove any unnecessary fields
+      const sanitizedData = sanitizeFormData(formDataToSubmit);
+      
       // Update status to Submitted
-      formDataToSubmit.metadata.status = 'Submitted';
+      sanitizedData.metadata.status = 'Submitted';
       
       // Prepare API data
-      const apiData = mapToApiFormat(formDataToSubmit);
+      const apiData = mapToApiFormat(sanitizedData);
       
       // Create or update form
       let response;
@@ -453,6 +504,10 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
         response = await updateClientForm(formId, apiData);
       } else {
         response = await createClientForm(apiData);
+        // If this is a new form, store the newly created form ID
+        if (response.success && response.data?.id) {
+          window.history.replaceState(null, '', `/client/forms/immobilien/${response.data.id}`);
+        }
       }
       
       if (response.success) {
@@ -466,6 +521,293 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Validate form data
+  const validateFormData = (data: ImmobilienFormData, isDraft: boolean = false) => {
+    // Always validate primary applicant basic info
+    if (!data.primaryApplicant?.personal?.firstName) {
+      return { isValid: false, message: 'Primary applicant first name is required' };
+    }
+    
+    if (!data.primaryApplicant?.personal?.lastName) {
+      return { isValid: false, message: 'Primary applicant last name is required' };
+    }
+    
+    if (!data.primaryApplicant?.personal?.email) {
+      return { isValid: false, message: 'Primary applicant email is required' };
+    }
+    
+    // Basic validation for email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.primaryApplicant.personal.email)) {
+      return { isValid: false, message: 'Primary applicant email format is invalid' };
+    }
+    
+    // Only check property and loan details if not a draft or if we're on/past those sections
+    if (!isDraft) {
+      // Check for required property details
+      if (data.property) {
+        if (!data.property.propertyAddress) {
+          return { isValid: false, message: 'Property address is required' };
+        }
+        
+        if (!data.property.propertyCity) {
+          return { isValid: false, message: 'Property city is required' };
+        }
+      } else {
+        return { isValid: false, message: 'Property details are required' };
+      }
+      
+      // Check for loan details
+      if (data.loan) {
+        if (data.loan.loanAmount <= 0) {
+          return { isValid: false, message: 'Loan amount must be greater than 0' };
+        }
+      } else {
+        return { isValid: false, message: 'Loan details are required' };
+      }
+      
+      // Check consent
+      if (!data.consent?.agreed) {
+        return { isValid: false, message: 'Consent must be agreed to' };
+      }
+    }
+    
+    return { isValid: true, message: '' };
+  };
+
+  // Sanitize form data to remove unwanted fields
+  const sanitizeFormData = (formData: ImmobilienFormData): ImmobilienFormData => {
+    const cleanedData = JSON.parse(JSON.stringify(formData));
+    
+    // Clean primary applicant data
+    if (cleanedData.primaryApplicant) {
+      // Remove any prototype methods/properties by recreating objects
+      cleanedData.primaryApplicant.personal = {
+        firstName: formData.primaryApplicant.personal.firstName || '',
+        lastName: formData.primaryApplicant.personal.lastName || '',
+        email: formData.primaryApplicant.personal.email || '',
+        phoneNumber: formData.primaryApplicant.personal.phoneNumber || '',
+        dateOfBirth: formData.primaryApplicant.personal.dateOfBirth || '',
+        address: formData.primaryApplicant.personal.address || '',
+        city: formData.primaryApplicant.personal.city || '',
+        postalCode: formData.primaryApplicant.personal.postalCode || '',
+        country: formData.primaryApplicant.personal.country || 'Germany',
+        maritalStatus: formData.primaryApplicant.personal.maritalStatus || '',
+        numberOfDependents: formData.primaryApplicant.personal.numberOfDependents || 0,
+        nationality: formData.primaryApplicant.personal.nationality,
+        birthPlace: formData.primaryApplicant.personal.birthPlace,
+        identificationNumber: formData.primaryApplicant.personal.identificationNumber,
+        coachId: formData.primaryApplicant.personal.coachId,
+        applicantType: 'PrimaryApplicant',
+        personalId: formData.primaryApplicant.personal.personalId
+      };
+      
+      // Clean employment details
+      cleanedData.primaryApplicant.employment = {
+        employmentType: formData.primaryApplicant.employment.employmentType || '',
+        occupation: formData.primaryApplicant.employment.occupation || '',
+        employerName: formData.primaryApplicant.employment.employerName || '',
+        contractType: formData.primaryApplicant.employment.contractType || '',
+        contractDuration: formData.primaryApplicant.employment.contractDuration,
+        employedSince: formData.primaryApplicant.employment.employedSince || '',
+        personalId: formData.primaryApplicant.employment.personalId,
+        employmentId: formData.primaryApplicant.employment.employmentId
+      };
+      
+      // Clean income details - only include defined fields
+      cleanedData.primaryApplicant.income = {
+        monthlyNetIncome: Number(formData.primaryApplicant.income.monthlyNetIncome) || 0,
+        annualGrossIncome: Number(formData.primaryApplicant.income.annualGrossIncome) || 0,
+        personalId: formData.primaryApplicant.income.personalId
+      };
+      
+      // Add optional income fields only if they exist and are not zero
+      if (formData.primaryApplicant.income.additionalIncome) {
+        cleanedData.primaryApplicant.income.additionalIncome = Number(formData.primaryApplicant.income.additionalIncome);
+      }
+      
+      if (formData.primaryApplicant.income.additionalIncomeSource) {
+        cleanedData.primaryApplicant.income.additionalIncomeSource = formData.primaryApplicant.income.additionalIncomeSource;
+      }
+      
+      // Clean expenses details
+      cleanedData.primaryApplicant.expenses = {
+        housingExpenses: Number(formData.primaryApplicant.expenses.housingExpenses) || 0,
+        utilityBills: Number(formData.primaryApplicant.expenses.utilityBills) || 0,
+        insurancePayments: Number(formData.primaryApplicant.expenses.insurancePayments) || 0,
+        transportationCosts: Number(formData.primaryApplicant.expenses.transportationCosts) || 0,
+        livingExpenses: Number(formData.primaryApplicant.expenses.livingExpenses) || 0,
+        personalId: formData.primaryApplicant.expenses.personalId
+      };
+      
+      // Clean assets
+      cleanedData.primaryApplicant.assets = {
+        cashAndSavings: Number(formData.primaryApplicant.assets.cashAndSavings) || 0,
+        personalId: formData.primaryApplicant.assets.personalId
+      };
+      
+      // Add optional asset fields only if they exist and are not zero
+      if (formData.primaryApplicant.assets.investments) {
+        cleanedData.primaryApplicant.assets.investments = Number(formData.primaryApplicant.assets.investments);
+      }
+      
+      // Clean liabilities - only include if we have data
+      if (Object.keys(formData.primaryApplicant.liabilities).length > 0) {
+        cleanedData.primaryApplicant.liabilities = {
+          personalId: formData.primaryApplicant.liabilities.personalId
+        };
+        
+        // Add optional liability fields only if they exist and are not zero
+        if (formData.primaryApplicant.liabilities.mortgages) {
+          cleanedData.primaryApplicant.liabilities.mortgages = Number(formData.primaryApplicant.liabilities.mortgages);
+        }
+        
+        if (formData.primaryApplicant.liabilities.carLoans) {
+          cleanedData.primaryApplicant.liabilities.carLoans = Number(formData.primaryApplicant.liabilities.carLoans);
+        }
+      }
+    }
+    
+    // Similar cleaning for secondary applicant if it exists
+    if (cleanedData.secondaryApplicant) {
+      // Similar structure as primary applicant cleaning
+      cleanedData.secondaryApplicant.personal = {
+        firstName: formData.secondaryApplicant?.personal?.firstName || '',
+        lastName: formData.secondaryApplicant?.personal?.lastName || '',
+        email: formData.secondaryApplicant?.personal?.email || '',
+        phoneNumber: formData.secondaryApplicant?.personal?.phoneNumber || '',
+        dateOfBirth: formData.secondaryApplicant?.personal?.dateOfBirth || '',
+        address: formData.secondaryApplicant?.personal?.address || '',
+        city: formData.secondaryApplicant?.personal?.city || '',
+        postalCode: formData.secondaryApplicant?.personal?.postalCode || '',
+        country: formData.secondaryApplicant?.personal?.country || 'Germany',
+        maritalStatus: formData.secondaryApplicant?.personal?.maritalStatus || '',
+        numberOfDependents: formData.secondaryApplicant?.personal?.numberOfDependents || 0,
+        nationality: formData.secondaryApplicant?.personal?.nationality,
+        birthPlace: formData.secondaryApplicant?.personal?.birthPlace,
+        identificationNumber: formData.secondaryApplicant?.personal?.identificationNumber,
+        coachId: formData.secondaryApplicant?.personal?.coachId,
+        applicantType: 'SecondaryApplicant',
+        personalId: formData.secondaryApplicant?.personal?.personalId
+      };
+      
+      // Clean other sections for secondary applicant (similar to primary)
+      // Employment
+      cleanedData.secondaryApplicant.employment = {
+        employmentType: formData.secondaryApplicant?.employment?.employmentType || '',
+        occupation: formData.secondaryApplicant?.employment?.occupation || '',
+        employerName: formData.secondaryApplicant?.employment?.employerName || '',
+        contractType: formData.secondaryApplicant?.employment?.contractType || '',
+        contractDuration: formData.secondaryApplicant?.employment?.contractDuration,
+        employedSince: formData.secondaryApplicant?.employment?.employedSince || '',
+        personalId: formData.secondaryApplicant?.employment?.personalId,
+        employmentId: formData.secondaryApplicant?.employment?.employmentId
+      };
+      
+      // Income
+      cleanedData.secondaryApplicant.income = {
+        monthlyNetIncome: Number(formData.secondaryApplicant?.income?.monthlyNetIncome) || 0,
+        annualGrossIncome: Number(formData.secondaryApplicant?.income?.annualGrossIncome) || 0,
+        personalId: formData.secondaryApplicant?.income?.personalId
+      };
+      
+      // Expenses
+      cleanedData.secondaryApplicant.expenses = {
+        housingExpenses: Number(formData.secondaryApplicant?.expenses?.housingExpenses) || 0,
+        utilityBills: Number(formData.secondaryApplicant?.expenses?.utilityBills) || 0,
+        insurancePayments: Number(formData.secondaryApplicant?.expenses?.insurancePayments) || 0,
+        transportationCosts: Number(formData.secondaryApplicant?.expenses?.transportationCosts) || 0,
+        livingExpenses: Number(formData.secondaryApplicant?.expenses?.livingExpenses) || 0,
+        personalId: formData.secondaryApplicant?.expenses?.personalId
+      };
+      
+      // Assets
+      cleanedData.secondaryApplicant.assets = {
+        cashAndSavings: Number(formData.secondaryApplicant?.assets?.cashAndSavings) || 0,
+        personalId: formData.secondaryApplicant?.assets?.personalId
+      };
+      
+      // Liabilities - only include if we have data
+      if (formData.secondaryApplicant?.liabilities && Object.keys(formData.secondaryApplicant.liabilities).length > 0) {
+        cleanedData.secondaryApplicant.liabilities = {
+          personalId: formData.secondaryApplicant?.liabilities?.personalId
+        };
+        
+        if (formData.secondaryApplicant?.liabilities?.mortgages) {
+          cleanedData.secondaryApplicant.liabilities.mortgages = Number(formData.secondaryApplicant?.liabilities?.mortgages);
+        }
+      }
+    }
+    
+    // Clean property data
+    if (cleanedData.property) {
+      cleanedData.property = {
+        propertyType: formData.property.propertyType || '',
+        propertyAddress: formData.property.propertyAddress || '',
+        propertyCity: formData.property.propertyCity || '',
+        propertyPostalCode: formData.property.propertyPostalCode || '',
+        propertyPrice: Number(formData.property.propertyPrice) || 0,
+        constructionYear: Number(formData.property.constructionYear) || 0,
+        livingArea: Number(formData.property.livingArea) || 0,
+        landArea: formData.property.landArea ? Number(formData.property.landArea) : undefined,
+        numberOfRooms: Number(formData.property.numberOfRooms) || 0,
+        numberOfBathrooms: Number(formData.property.numberOfBathrooms) || 0
+      };
+    }
+    
+    // Clean loan data
+    if (cleanedData.loan) {
+      cleanedData.loan = {
+        loanAmount: Number(formData.loan.loanAmount) || 0,
+        downPayment: Number(formData.loan.downPayment) || 0,
+        loanTerm: formData.loan.loanTerm || '',
+        interestRateType: formData.loan.interestRateType || 'Fixed',
+        fixedRatePeriod: formData.loan.fixedRatePeriod,
+        propertyPurpose: formData.loan.propertyPurpose || 'Primary Residence'
+      };
+    }
+    
+    // Clean consent data
+    if (cleanedData.consent) {
+      cleanedData.consent = {
+        signature: formData.consent.signature || '',
+        signatureImageURL: formData.consent.signatureImageURL || '',
+        date: formData.consent.date || '',
+        place: formData.consent.place || '',
+        agreed: Boolean(formData.consent.agreed),
+        consentType: formData.consent.consentType,
+        consentText: formData.consent.consentText,
+        location: formData.consent.location
+      };
+    }
+    
+    // Handle documents array - preserve only the necessary fields
+    if (cleanedData.documents && Array.isArray(cleanedData.documents)) {
+      cleanedData.documents = formData.documents.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        description: doc.description,
+        required: Boolean(doc.required),
+        fileUrl: doc.fileUrl,
+        uploadDate: doc.uploadDate,
+        status: doc.status || 'Pending'
+      }));
+    }
+    
+    // Clean metadata
+    cleanedData.metadata = {
+      formType: formData.metadata.formType || 'Immobilien',
+      formName: formData.metadata.formName || 'Immobilien Antrag',
+      status: formData.metadata.status || 'Draft',
+      formId: formData.metadata.formId,
+      submittedAt: formData.metadata.submittedAt,
+      updatedAt: new Date().toISOString(),
+      userId: formData.metadata.userId
+    };
+    
+    return cleanedData;
   };
 
   // Close error alert
@@ -773,23 +1115,30 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
   }
 
   return (
-    <Box className="immo-form-container" sx={{ width: '100%', mb: 4 }}>
+    <FormLayout title={t('forms.immobilien.title')}>
       {/* Progress indicator */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Box sx={{ width: '100%', mr: 1 }}>
-          <LinearProgress variant="determinate" value={progress} />
+          <LinearProgress 
+            variant="determinate" 
+            value={progress} 
+            sx={{ 
+              height: 8, 
+              borderRadius: 5,
+              backgroundColor: 'rgba(29, 185, 84, 0.1)',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#1DB954'
+              }
+            }}
+          />
         </Box>
         <Box sx={{ minWidth: 35 }}>
           <Typography variant="body2" color="text.secondary">{`${Math.round(progress)}%`}</Typography>
         </Box>
       </Box>
       
-      {/* Form title and control */}
-      <Box className="immo-form-header" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          {t('forms.immobilien.title')}
-        </Typography>
-        
+      {/* Form control */}
+      <Box className="immo-form-header" sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 3 }}>
         <Box>
           <FormControlLabel
             control={
@@ -824,7 +1173,31 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
       </Box>
       
       {/* Stepper */}
-      <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+      <Stepper 
+        activeStep={activeStep} 
+        alternativeLabel 
+        sx={{ 
+          mb: 4,
+          '& .MuiStepIcon-root.MuiStepIcon-active': {
+            color: '#1DB954',
+          },
+          '& .MuiStepIcon-root.MuiStepIcon-completed': {
+            color: '#1DB954',
+          },
+          '& .MuiStepLabel-label.MuiStepLabel-alternativeLabel': {
+            marginTop: 1
+          },
+          '& .MuiStepConnector-line': {
+            borderTopWidth: 3
+          },
+          '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+            borderColor: '#1DB954'
+          },
+          '& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
+            borderColor: '#1DB954'
+          }
+        }}
+      >
         {steps.map((label, index) => (
           <Step key={label}>
             <StepLabel>{t(`forms.immobilien.steps.${label}`)}</StepLabel>
@@ -846,6 +1219,7 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
           onClick={handleBack}
           startIcon={<ArrowBack />}
           disabled={activeStep === 0}
+          sx={{ borderColor: '#1DB954', color: '#1DB954', '&:hover': { borderColor: '#16953F', backgroundColor: 'rgba(29, 185, 84, 0.1)' } }}
         >
           {t('forms.immobilien.navigation.back')}
         </Button>
@@ -856,27 +1230,29 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
             onClick={() => saveFormState(true)}
             startIcon={<Save />}
             disabled={saving}
-            sx={{ mr: 2 }}
+            sx={{ mr: 2, borderColor: '#1DB954', color: '#1DB954', '&:hover': { borderColor: '#16953F', backgroundColor: 'rgba(29, 185, 84, 0.1)' } }}
           >
-            {saving ? <CircularProgress size={24} /> : t('forms.immobilien.navigation.save')}
+            {saving ? <CircularProgress size={24} color="success" /> : t('forms.immobilien.navigation.save')}
           </Button>
           
           {activeStep === steps.length - 1 ? (
             <Button
               variant="contained"
-              color="primary"
+              color="success"
               onClick={submitForm}
               startIcon={<Send />}
               disabled={saving}
+              sx={{ backgroundColor: '#1DB954', '&:hover': { backgroundColor: '#16953F' } }}
             >
               {saving ? <CircularProgress size={24} /> : t('forms.immobilien.navigation.submit')}
             </Button>
           ) : (
             <Button
               variant="contained"
-              color="primary"
+              color="success"
               onClick={handleNext}
               endIcon={<ArrowForward />}
+              sx={{ backgroundColor: '#1DB954', '&:hover': { backgroundColor: '#16953F' } }}
             >
               {t('forms.immobilien.navigation.next')}
             </Button>
@@ -896,7 +1272,7 @@ const ImmoForm: React.FC<{ formId?: string }> = ({ formId }) => {
           {success}
         </Alert>
       </Snackbar>
-    </Box>
+    </FormLayout>
   );
 };
 

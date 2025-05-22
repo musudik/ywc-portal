@@ -307,7 +307,7 @@ export function mapToApiFormat(formData: ImmobilienFormData): any {
   const { primaryApplicant, secondaryApplicant, property, loan, consent, documents, metadata } = formData;
   
   // Create the API format object
-  return {
+  const apiData: any = {
     formType: metadata.formType,
     formName: metadata.formName,
     formData: {
@@ -316,9 +316,7 @@ export function mapToApiFormat(formData: ImmobilienFormData): any {
           ...primaryApplicant.personal,
           dateOfBirth: typeof primaryApplicant.personal.dateOfBirth === 'string' 
             ? primaryApplicant.personal.dateOfBirth.split('T')[0] 
-            : primaryApplicant.personal.dateOfBirth instanceof Date
-              ? primaryApplicant.personal.dateOfBirth.toISOString().split('T')[0]
-              : ''
+            : ''
         },
         employment: {
           ...primaryApplicant.employment,
@@ -328,38 +326,49 @@ export function mapToApiFormat(formData: ImmobilienFormData): any {
               ? primaryApplicant.employment.employedSince.toISOString().split('T')[0]
               : ''
         },
-        income: primaryApplicant.income,
-        expenses: primaryApplicant.expenses,
-        assets: primaryApplicant.assets,
-        liabilities: primaryApplicant.liabilities
+        income: {...primaryApplicant.income},
+        expenses: {...primaryApplicant.expenses},
+        assets: {...primaryApplicant.assets},
+        liabilities: {...primaryApplicant.liabilities}
       },
-      ...(secondaryApplicant && {
-        secondaryApplicant: {
-          personal: {
-            ...secondaryApplicant.personal,
-            dateOfBirth: secondaryApplicant.personal.dateOfBirth.split('T')[0] // Ensure proper date format
-          },
-          employment: {
-            ...secondaryApplicant.employment,
-            employedSince: secondaryApplicant.employment.employedSince.split('T')[0] // Ensure proper date format
-          },
-          income: secondaryApplicant.income,
-          expenses: secondaryApplicant.expenses,
-          assets: secondaryApplicant.assets,
-          liabilities: secondaryApplicant.liabilities
-        }
-      }),
-      property,
-      loan,
+      property: {...property},
+      loan: {...loan},
       consent: {
         ...consent,
-        date: consent.date.split('T')[0] // Ensure proper date format
+        date: typeof consent.date === 'string' ? consent.date.split('T')[0] : ''
       },
-      documents
+      documents: documents?.map(doc => ({...doc})) || []
     },
     status: metadata.status,
     userId: metadata.userId
   };
+
+  // Add secondary applicant only if it exists
+  if (secondaryApplicant) {
+    apiData.formData.secondaryApplicant = {
+      personal: {
+        ...secondaryApplicant.personal,
+        dateOfBirth: typeof secondaryApplicant.personal.dateOfBirth === 'string'
+          ? secondaryApplicant.personal.dateOfBirth.split('T')[0]
+          : ''
+      },
+      employment: {
+        ...secondaryApplicant.employment,
+        employedSince: typeof secondaryApplicant.employment.employedSince === 'string'
+          ? secondaryApplicant.employment.employedSince.split('T')[0]
+          : secondaryApplicant.employment.employedSince instanceof Date
+            ? secondaryApplicant.employment.employedSince.toISOString().split('T')[0]
+            : ''
+      },
+      income: {...secondaryApplicant.income},
+      expenses: {...secondaryApplicant.expenses},
+      assets: {...secondaryApplicant.assets},
+      liabilities: {...secondaryApplicant.liabilities}
+    };
+  }
+  
+  // Remove any undefined values from the final object
+  return JSON.parse(JSON.stringify(apiData));
 }
 
 export default {

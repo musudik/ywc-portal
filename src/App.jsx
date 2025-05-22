@@ -109,6 +109,7 @@ function App() {
                   <Route path="/client/settings/security" element={<SecuritySettings />} />
                   {/* Form routes */}
                   <Route path="/client/forms/immobilien" element={<ImmoForm />} />
+                  <Route path="/client/forms/immobilien/:id" element={<ImmoForm />} />
                   {/* Other client routes */}
                   <Route path="/client/forms" element={<ClientForms />} />
                 </Route>

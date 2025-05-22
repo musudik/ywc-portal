@@ -631,7 +631,8 @@
       "success": {
         "formSaved": "Form data saved successfully.",
         "formSubmitted": "Application submitted successfully!",
-        "secondaryApplicantLoaded": "Secondary applicant data loaded successfully."
+        "secondaryApplicantLoaded": "Secondary applicant data loaded successfully.",
+        "secondaryApplicantAlreadyLoaded": "Secondary applicant already loaded."
       }
     },
     "privateHealthInsurance": {

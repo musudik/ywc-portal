@@ -10,7 +10,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Typography
 } from '@mui/material';
 import { PersonalDetails } from '../immo-form-data';
 
@@ -40,8 +41,18 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({ data, onChang
   };
 
   return (
-    <Card variant="outlined">
-      <CardHeader title={title} />
+    <Card variant="outlined" className="immo-card">
+      <CardHeader 
+        title={
+          <Typography variant="h6" className="form-section-title">
+            {title}
+          </Typography>
+        } 
+        sx={{
+          backgroundColor: 'rgba(29, 185, 84, 0.05)',
+          borderBottom: '1px solid rgba(29, 185, 84, 0.2)'
+        }}
+      />
       <CardContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField

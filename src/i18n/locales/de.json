@@ -561,7 +561,8 @@
       "success": {
         "formSaved": "Formulardaten erfolgreich gespeichert.",
         "formSubmitted": "Antrag erfolgreich eingereicht!",
-        "secondaryApplicantLoaded": "Daten des zweiten Antragstellers erfolgreich geladen."
+        "secondaryApplicantLoaded": "Daten des zweiten Antragstellers erfolgreich geladen.",
+        "secondaryApplicantAlreadyLoaded": "Daten des zweiten Antragstellers bereits geladen."
       }
     },
     "privateHealthInsurance": {
