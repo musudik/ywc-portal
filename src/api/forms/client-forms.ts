@@ -14,12 +14,14 @@ export interface ClientFormData {
 
 export interface ClientFormResponse {
   formId: string;
+  id?: string;  // The server might return 'id' instead of 'formId' in some cases
   formType: string;
   formName: string;
   formData: any;
   status: string;
   submittedAt: string;
   updatedAt: string;
+  createdAt?: string;
   userId: string;
 }
 
@@ -133,20 +135,34 @@ export const getAllClientForms = async (): Promise<ApiResponse<ClientFormRespons
  * @returns The client form data
  */
 export const getClientFormById = async (
-  formId: string
+  userId: string
 ): Promise<ApiResponse<ClientFormResponse>> => {
   try {
-    console.log(`Fetching client form with ID: ${formId}`);
-    const response = await clientFormsApi.get(`/${formId}`);
-    console.log('Client form fetched successfully:', response.data);
-    
-    return {
-      success: true,
-      data: response.data,
-      message: 'Form fetched successfully'
-    };
+    console.log(`Fetching client form with ID: ${userId}`);
+    // First try with the id directly
+    try {
+      const response = await clientFormsApi.get(`/${userId}`);
+      console.log('Client form fetched successfully:', response.data);
+      
+      return {
+        success: true,
+        data: response.data,
+        message: 'Form fetched successfully'
+      };
+    } catch (directError) {
+      // If direct ID fails, try with /id/ prefix
+      console.log('Direct ID fetch failed, trying with /id/ prefix');
+      const response = await clientFormsApi.get(`/id/${userId}`);
+      console.log('Client form fetched successfully using /id/ prefix:', response.data);
+      
+      return {
+        success: true,
+        data: response.data,
+        message: 'Form fetched successfully'
+      };
+    }
   } catch (error: any) {
-    console.error(`Error fetching client form with ID ${formId}:`, error);
+    console.error(`Error fetching client form with ID ${userId}:`, error);
     return {
       success: false,
       message: error.response?.data?.message || 'An error occurred while fetching the form',

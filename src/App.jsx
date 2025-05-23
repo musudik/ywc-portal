@@ -110,6 +110,21 @@ function App() {
                   {/* Form routes */}
                   <Route path="/client/forms/immobilien" element={<ImmoForm />} />
                   <Route path="/client/forms/immobilien/:id" element={<ImmoForm />} />
+                  {/* Add routes for other form types - these will be implemented later */}
+                  <Route path="/client/forms/privateHealthInsurance" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/privateHealthInsurance/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/stateHealthInsurance" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/stateHealthInsurance/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/kfz" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/kfz/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/electricity" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/electricity/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/loans" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/loans/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/sanuspay" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/sanuspay/:id" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/gems" element={<Navigate to="/client/forms" />} />
+                  <Route path="/client/forms/gems/:id" element={<Navigate to="/client/forms" />} />
                   {/* Other client routes */}
                   <Route path="/client/forms" element={<ClientForms />} />
                 </Route>

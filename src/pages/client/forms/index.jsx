@@ -95,41 +95,78 @@ const ClientForms = () => {
         const response = await formsApi.getAllClientForms();
         
         if (response.success) {
-          console.log('Fetched forms:', response.data);
+          console.log('Raw API response:', response);
+          console.log('Fetched forms data:', response.data);
           
           // Create a map of form types to their corresponding form data
           const formsMap = {};
           if (response.data && Array.isArray(response.data)) {
             response.data.forEach(form => {
-              formsMap[form.formType] = form;
+              // Handle different API response structures
+              // Some APIs return formType, some might return type or form_type
+              const formType = form.formType || form.type || form.form_type;
+              console.log(`Processing form: ${formType}, ID: ${form.formId || form.id}`);
+              
+              if (formType) {
+                // First try direct match
+                const matchingType = formTypes.find(
+                  type => type.id.toLowerCase() === formType.toLowerCase()
+                );
+                
+                if (matchingType) {
+                  // We found a matching form type in our formTypes array
+                  formsMap[matchingType.id.toLowerCase()] = {
+                    ...form,
+                    formId: form.formId || form.id,
+                  };
+                  console.log(`Matched ${formType} to form type ${matchingType.id}`);
+                } else {
+                  // Fallback to using the formType as is
+                  const formTypeKey = formType.toLowerCase();
+                  formsMap[formTypeKey] = {
+                    ...form,
+                    formId: form.formId || form.id,
+                  };
+                }
+              }
             });
           }
           
+          console.log('Forms map created:', formsMap);
+          
           // Create the final forms array with all form types
           const formsList = formTypes.map(type => {
-            const existingForm = formsMap[type.id];
+            // Look for existing form using standardized type ID
+            const typeKey = type.id.toLowerCase();
+            const existingForm = formsMap[typeKey];
+            
+            console.log(`Checking form type: ${type.id}, exists: ${!!existingForm}`);
             
             if (existingForm) {
-              // Form exists, return it with existing data
-              return {
+              // Form exists, return it with existing data and correct path format
+              const formEntry = {
                 ...existingForm,
                 id: type.id,
                 name: type.name,
                 status: "filled",
+                formId: existingForm.formId,
                 link: `${window.location.origin}/client/forms/${type.id}/${existingForm.formId}`
               };
+              console.log(`Found existing form for ${type.id}:`, formEntry);
+              return formEntry;
             } else {
-              // Form doesn't exist, return a template
+              // Form doesn't exist, return a template with correct path format
               return {
                 id: type.id,
                 name: type.name,
                 status: "not_filled",
-                link: `${window.location.origin}/client/forms/${type.id}/new`,
+                link: `${window.location.origin}/client/forms/${type.id}`,
                 formId: null
               };
             }
           });
           
+          console.log('Final forms list:', formsList);
           setForms(formsList);
         } else {
           // Handle API error
@@ -163,6 +200,15 @@ const ClientForms = () => {
       case "immobilien":
         navigate("/client/forms/immobilien");
         break;
+      case "privateHealthInsurance":
+      case "stateHealthInsurance":
+      case "kfz":
+      case "electricity":
+      case "loans":
+      case "sanuspay":
+      case "gems":
+        navigate(`/client/forms/${form.id}`);
+        break;
       default:
         alert(`Creating a new ${form.name} form... (Not yet implemented)`);
         break;
@@ -172,15 +218,47 @@ const ClientForms = () => {
   const handleViewForm = (form) => {
     if (!form.formId) return;
     
-    // Navigate to view the form
-    navigate(`/client/forms/${form.id}/view/${form.formId}`);
+    // Navigate to view the form based on form type
+    switch(form.id) {
+      case "immobilien":
+        navigate(`/client/forms/immobilien/${form.formId}`);
+        break;
+      case "privateHealthInsurance":
+      case "stateHealthInsurance":
+      case "kfz":
+      case "electricity":
+      case "loans":
+      case "sanuspay":
+      case "gems":
+        navigate(`/client/forms/${form.id}/${form.formId}`);
+        break;
+      default:
+        alert(`Viewing ${form.name} form... (Not yet implemented)`);
+        break;
+    }
   };
 
   const handleUpdateForm = (form) => {
     if (!form.formId) return;
     
-    // Navigate to edit the form
-    navigate(`/client/forms/${form.id}/edit/${form.formId}`);
+    // Navigate to edit the form based on form type
+    switch(form.id) {
+      case "immobilien":
+        navigate(`/client/forms/immobilien/${form.formId}`);
+        break;
+      case "privateHealthInsurance":
+      case "stateHealthInsurance":
+      case "kfz":
+      case "electricity":
+      case "loans":
+      case "sanuspay":
+      case "gems":
+        navigate(`/client/forms/${form.id}/${form.formId}`);
+        break;
+      default:
+        alert(`Updating ${form.name} form... (Not yet implemented)`);
+        break;
+    }
   };
 
   const handleDeleteForm = async (form) => {

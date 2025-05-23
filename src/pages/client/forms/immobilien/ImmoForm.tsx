@@ -4,6 +4,7 @@ import { Box, Card, CardContent, Grid, Typography, Stepper, Step, StepLabel, But
   FormControlLabel, Checkbox, CircularProgress, TextField, Alert, Snackbar, LinearProgress } from '@mui/material';
 import { ArrowBack, ArrowForward, Save, Send } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
+import { useAuth } from "../../../../contexts/AuthContext";
 
 // Import FormLayout
 import FormLayout from '../../../../components/layouts/FormLayout';
@@ -17,7 +18,7 @@ import {
 
 // Import API functions
 import { profileApi } from '../../../../api/profile';
-import { createClientForm, updateClientForm, getClientFormById } from '../../../../api/forms/client-forms';
+import { createClientForm, updateClientForm, getClientFormById, getAllClientForms } from '../../../../api/forms/client-forms';
 
 // Import form sections
 import PersonalDetailsForm from './sections/PersonalDetailsForm';
@@ -47,6 +48,16 @@ const steps = [
   'consent',
   'documents'
 ];
+
+// Define an interface for form metadata
+interface FormMetadata {
+  formId?: string;
+  id?: string;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  status?: string;
+}
 
 // Format all dates in form data to YYYY-MM-DD format
 const formatDates = (data: any): any => {
@@ -88,12 +99,15 @@ const formatDates = (data: any): any => {
 };
 
 const ImmoForm: React.FC = () => {
+  const { user } = useAuth();
   const { id: formId } = useParams<{ id: string }>();
+  const { id: id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [formData, setFormData] = useState<ImmobilienFormData>(createEmptyImmobilienForm());
+  const [formMetadata, setFormMetadata] = useState<FormMetadata>({});
   const [singleApplicant, setSingleApplicant] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -104,14 +118,73 @@ const ImmoForm: React.FC = () => {
   useEffect(() => {
     const loadFormData = async () => {
       setLoading(true);
+      let userId = user?.id;
+      console.log('Loading form with ID:', userId);
+
       try {
-        if (formId) {
+        if (userId) {
           // Load existing form
-          const response = await getClientFormById(formId);
+          console.log('Loading form with ID:', userId);
+          
+          // First try to get the form with the provided userId
+          let response = await getClientFormById(userId);
+          
+          // If that fails, it might be that we need to use 'id' instead of 'formId'
+          if (!response.success) {
+            console.log('Failed to load form with provided ID, checking if it might be the "id" field instead of "formId"');
+            
+            // Try to get all forms first
+            const allFormsResponse = await getAllClientForms();
+            if (allFormsResponse.success && Array.isArray(allFormsResponse.data)) {
+              // Find the form with matching formId or id
+              const matchingForm = allFormsResponse.data.find(form => 
+                form.formId === formId || form.id === formId);
+              
+              if (matchingForm) {
+                console.log('Found matching form in all forms list:', matchingForm);
+                response = {
+                  success: true,
+                  data: matchingForm,
+                  message: 'Form found in list of all forms'
+                };
+              }
+            }
+          }
+          
           if (response.success && response.data) {
             console.log('Loaded form data from database:', response.data);
-            setFormData(response.data.formData);
-            setSingleApplicant(!response.data.formData.secondaryApplicant);
+            
+            // Handle different response structures - form data might be directly in response.data 
+            // or nested in response.data.formData
+            let formDataContent;
+            
+            if (response.data.formData) {
+              // If the form data is nested in a formData property
+              formDataContent = response.data.formData;
+              console.log('Form data found in response.data.formData');
+            } else {
+              // If the form data is directly in the response
+              formDataContent = response.data;
+              console.log('Using form data directly from response.data');
+            }
+            
+            // Store the form metadata separately to use when updating
+            const metadata: FormMetadata = {
+              formId: response.data.formId || response.data.id,
+              userId: response.data.userId,
+              createdAt: response.data.createdAt,
+              updatedAt: response.data.updatedAt,
+              status: response.data.status || 'Draft'
+            };
+            
+            console.log('Form metadata:', metadata);
+            setFormMetadata(metadata);
+            
+            // Set the form data
+            setFormData(formDataContent);
+            
+            // Update single applicant status based on the presence of a secondary applicant
+            setSingleApplicant(!formDataContent.secondaryApplicant);
           } else {
             throw new Error(response.message || 'Failed to load form data');
           }
@@ -334,13 +407,13 @@ const ImmoForm: React.FC = () => {
       }
       
       // Save the updated form if we have a formId
-      if (formId) {
+      if (id) {
         const validationResult = validateFormData(updatedFormData, true);
         if (validationResult.isValid) {
           const sanitizedData = sanitizeFormData(updatedFormData);
           const apiData = mapToApiFormat(sanitizedData);
           
-          const response = await updateClientForm(formId, apiData);
+          const response = await updateClientForm(id, apiData);
           if (!response.success) {
             console.warn('Failed to update form with secondary applicant data');
           }
@@ -430,17 +503,55 @@ const ImmoForm: React.FC = () => {
         delete formDataToSubmit.secondaryApplicant;
       }
       
+      // Ensure metadata exists
+      if (!formDataToSubmit.metadata) {
+        formDataToSubmit.metadata = {
+          formType: 'Immobilien',
+          formName: 'Immobilien Antrag',
+          status: 'Draft',
+          updatedAt: new Date().toISOString()
+        };
+        console.log('Created missing metadata field in formData');
+      }
+      
       // For drafts, use a more lenient validation
       const validationResult = validateFormData(formDataToSubmit, true);
       if (!validationResult.isValid) {
+        console.error('Form validation failed:', validationResult.message);
         throw new Error(`Invalid form data: ${validationResult.message}`);
       }
       
       // Clean the data to remove any unnecessary fields
-      const sanitizedData = sanitizeFormData(formDataToSubmit);
+      let sanitizedData;
+      try {
+        sanitizedData = sanitizeFormData(formDataToSubmit);
+      } catch (sanitizeError) {
+        console.error('Error during form data sanitization:', sanitizeError);
+        console.log('Form data that caused the error:', JSON.stringify(formDataToSubmit, null, 2));
+        throw sanitizeError;
+      }
       
-      // Prepare API data
+      // Prepare API data with metadata
       const apiData = mapToApiFormat(sanitizedData);
+      
+      // When updating an existing form, we shouldn't include formId in the request body
+      // as it's already in the URL path
+      if (formId) {
+        // Remove formId from apiData to avoid confusion
+        delete apiData.formId;
+        console.log(`Updating form with ID ${formId}, removed formId from request body`);
+      } 
+      else if (formId) {
+        // For new forms where we have metadata but no URL formId yet
+        apiData.formId = formId;
+        console.log(`Using formId ${formId} from metadata for new form`);
+      }
+      
+      // Include userId in all requests
+      if (formMetadata.userId) {
+        apiData.userId = formMetadata.userId;
+        console.log(`Including userId ${formMetadata.userId} in request`);
+      }
       
       // Create or update form
       let response;
@@ -449,8 +560,20 @@ const ImmoForm: React.FC = () => {
       } else {
         response = await createClientForm(apiData);
         // If this is a new form, store the newly created form ID
-        if (response.success && response.data?.id) {
-          window.history.replaceState(null, '', `/client/forms/immobilien/${response.data.id}`);
+        if (response.success && response.data) {
+          const newFormId = response.data.id || response.data.formId;
+          if (newFormId) {
+            console.log(`New form created with ID: ${newFormId}`);
+            setFormMetadata({
+              ...formMetadata,
+              formId: newFormId,
+              userId: response.data.userId,
+              createdAt: response.data.createdAt,
+              updatedAt: response.data.updatedAt,
+              status: response.data.status
+            });
+            window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
+          }
         }
       }
       
@@ -483,30 +606,82 @@ const ImmoForm: React.FC = () => {
         delete formDataToSubmit.secondaryApplicant;
       }
       
+      // Ensure metadata exists
+      if (!formDataToSubmit.metadata) {
+        formDataToSubmit.metadata = {
+          formType: 'Immobilien',
+          formName: 'Immobilien Antrag',
+          status: 'Draft',
+          updatedAt: new Date().toISOString()
+        };
+        console.log('Created missing metadata field in formData for submission');
+      }
+      
       // For submission, use strict validation
       const validationResult = validateFormData(formDataToSubmit, false);
       if (!validationResult.isValid) {
+        console.error('Form validation failed during submission:', validationResult.message);
         throw new Error(`Invalid form data: ${validationResult.message}`);
       }
       
       // Clean the data to remove any unnecessary fields
-      const sanitizedData = sanitizeFormData(formDataToSubmit);
+      let sanitizedData;
+      try {
+        sanitizedData = sanitizeFormData(formDataToSubmit);
+      } catch (sanitizeError) {
+        console.error('Error during form data sanitization during submission:', sanitizeError);
+        console.log('Form data that caused the error during submission:', JSON.stringify(formDataToSubmit, null, 2));
+        throw sanitizeError;
+      }
       
       // Update status to Submitted
       sanitizedData.metadata.status = 'Submitted';
       
-      // Prepare API data
+      // Prepare API data with metadata
       const apiData = mapToApiFormat(sanitizedData);
+      
+      // When updating an existing form, we shouldn't include formId in the request body
+      // as it's already in the URL path
+      if (formId) {
+        // Remove formId from apiData to avoid confusion
+        delete apiData.formId;
+        console.log(`Submitting form with ID ${formId}, removed formId from request body`);
+      } 
+      else if (formMetadata.formId) {
+        // For new forms where we have metadata but no URL formId yet
+        apiData.formId = formMetadata.formId;
+        console.log(`Using formId ${formMetadata.formId} from metadata for submission`);
+      }
+      
+      // Include userId in all requests
+      if (formMetadata.userId) {
+        apiData.userId = formMetadata.userId;
+        console.log(`Including userId ${formMetadata.userId} in submission request`);
+      }
+      
+      apiData.status = 'Submitted';
       
       // Create or update form
       let response;
-      if (formId) {
-        response = await updateClientForm(formId, apiData);
+      if (user?.id) {
+        response = await updateClientForm(user?.id, apiData);
       } else {
         response = await createClientForm(apiData);
         // If this is a new form, store the newly created form ID
-        if (response.success && response.data?.id) {
-          window.history.replaceState(null, '', `/client/forms/immobilien/${response.data.id}`);
+        if (response.success && response.data) {
+          const newFormId = response.data.id || response.data.formId;
+          if (newFormId) {
+            console.log(`New form submitted with ID: ${newFormId}`);
+            setFormMetadata({
+              ...formMetadata,
+              formId: newFormId,
+              userId: response.data.userId,
+              createdAt: response.data.createdAt,
+              updatedAt: response.data.updatedAt,
+              status: response.data.status
+            });
+            window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
+          }
         }
       }
       
@@ -798,13 +973,13 @@ const ImmoForm: React.FC = () => {
     
     // Clean metadata
     cleanedData.metadata = {
-      formType: formData.metadata.formType || 'Immobilien',
-      formName: formData.metadata.formName || 'Immobilien Antrag',
-      status: formData.metadata.status || 'Draft',
-      formId: formData.metadata.formId,
-      submittedAt: formData.metadata.submittedAt,
+      formType: formData.metadata?.formType || 'Immobilien',
+      formName: formData.metadata?.formName || 'Immobilien Antrag',
+      status: formData.metadata?.status || 'Draft',
+      formId: formData.metadata?.formId,
+      submittedAt: formData.metadata?.submittedAt,
       updatedAt: new Date().toISOString(),
-      userId: formData.metadata.userId
+      userId: formData.metadata?.userId
     };
     
     return cleanedData;
