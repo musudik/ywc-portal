@@ -13,10 +13,8 @@ const RiskAppetiteForm = ({
   onComplete, 
   onBack, 
   personalId, 
-  initialData, 
-  showUpdateButton, 
-  onUpdate, 
-  profileComplete 
+  initialData,
+  skipApiSave = false 
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -80,9 +78,13 @@ const RiskAppetiteForm = ({
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === "file") {
+      // Convert file to string representation (filename)
+      // In a production app, you'd typically upload the file to a storage service
+      // and store the URL/path as a string
+      const fileName = files[0] ? files[0].name : "";
       setFormData(prev => ({
         ...prev,
-        [name]: files[0] // Store the file object
+        [name]: fileName // Store filename as string instead of File object
       }));
     } else {
       setFormData(prev => ({
@@ -106,12 +108,48 @@ const RiskAppetiteForm = ({
       };
 
       let response;
-      if (formData.riskAppetiteId) {
+      
+      // Check if we have a riskAppetiteId (from formData, initialData, or fetched data)
+      const existingRiskAppetiteId = formData.riskAppetiteId || initialData?.riskAppetiteId;
+      
+      console.log("Existing risk appetite ID:", existingRiskAppetiteId);
+      if (existingRiskAppetiteId) {
+        console.log(`Updating existing risk appetite with ID: ${existingRiskAppetiteId}`);
         // Update existing risk appetite
-        response = await profileApi.updateRiskAppetite(dataToSubmit);
+        response = await profileApi.updateRiskAppetite({
+          ...dataToSubmit,
+          riskAppetiteId: existingRiskAppetiteId
+        });
       } else {
-        // Create new risk appetite
-        response = await profileApi.saveRiskAppetite(dataToSubmit);
+        // Check if risk appetite exists for this personalId
+        try {
+          console.log("Checking if risk appetite exists for personalId:", personalId);
+          const existingRiskAppetite = await profileApi.getRiskAppetite(personalId);
+          
+          if (existingRiskAppetite && (existingRiskAppetite.riskAppetiteId || existingRiskAppetite.id)) {
+            console.log(`Risk appetite found, updating with ID: ${existingRiskAppetite.riskAppetiteId || existingRiskAppetite.id}`);
+            // Update existing risk appetite
+            response = await profileApi.updateRiskAppetite({
+              ...dataToSubmit,
+              riskAppetiteId: existingRiskAppetite.riskAppetiteId || existingRiskAppetite.id
+            });
+          } else {
+            console.log("Creating new risk appetite - no existing data found");
+            // Create new risk appetite
+            response = await profileApi.saveRiskAppetite(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No risk appetite found')) {
+            console.log("No existing risk appetite found, creating new");
+            response = await profileApi.saveRiskAppetite(dataToSubmit);
+          } else {
+            console.error("Error checking for existing risk appetite:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new risk appetite after failed check");
+            response = await profileApi.saveRiskAppetite(dataToSubmit);
+          }
+        }
       }
 
       // Call the onComplete callback with the response
@@ -272,40 +310,20 @@ const RiskAppetiteForm = ({
           {t('common.back', 'Back')}
         </Button>
         
-        {/* Conditionally render the appropriate button */}
-        {profileComplete ? (
-          <Button 
-            type="button"
-            onClick={onUpdate}
-            disabled={loading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t('common.updating', 'Updating...')}
-              </span>
-            ) : t('common.update', 'Update')}
-          </Button>
-        ) : (
-          <Button 
-            type="submit" 
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t('common.saving', 'Saving...')}
-              </span>
-            ) : t('common.finish', 'Finish')}
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {t('common.saving', 'Saving...')}
+            </span>
+          ) : t('common.finish', 'Finish')}
+        </Button>
       </div>
     </form>
   );

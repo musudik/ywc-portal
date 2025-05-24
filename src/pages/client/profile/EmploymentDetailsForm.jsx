@@ -5,8 +5,8 @@ import { Input } from "../../../components/ui/input";
 import { profileApi } from "../../../api";
 import { createSafeTranslate } from "../../../utils/translationUtils";
 
-// Define constants for dropdown options
-const EMPLOYMENT_TYPE_OPTIONS = ["employed", "selfEmployed", "unemployed", "retired", "student", "other"];
+// Define constants for dropdown options - these should match the backend EmploymentType enum
+const EMPLOYMENT_TYPE_OPTIONS = ["Employed", "SelfEmployed", "Unemployed", "Retired", "Student", "Other"];
 const CONTRACT_TYPE_OPTIONS = ["permanent", "temporary", "partTime", "fullTime", "freelance", "other"];
 
 // Helper function to format dates to YYYY-MM-DD format
@@ -27,12 +27,8 @@ const mapBackendToFormValues = (backendData) => {
   
   const formData = {...backendData};
   
-  // // Map employment type
-  // if (formData.employmentType === "PrimaryEmployment") {
-  //   formData.employmentType = "Employed";
-  // }
-  
-  // Map contract type - capitalize first letter for display
+  // Employment type values should already be correct from backend
+  // Contract type - keep as is, just ensure it's lowercase for form display
   if (formData.contractType && typeof formData.contractType === 'string') {
     formData.contractType = formData.contractType.toLowerCase();
   }
@@ -49,10 +45,8 @@ const mapBackendToFormValues = (backendData) => {
 const mapFormToBackendValues = (formData) => {
   const backendData = {...formData};
   
-  // // Map employment type
-  // if (backendData.employmentType === "employed") {
-  //   backendData.employmentType = "PrimaryEmployment";
-  // }
+  // Employment type should already be correct enum value
+  // No mapping needed as we're using the backend enum values directly
   
   return backendData;
 };
@@ -62,9 +56,6 @@ const EmploymentDetailsForm = ({
   onBack, 
   personalId, 
   initialData,
-  showUpdateButton,
-  onUpdate,
-  profileComplete,
   showPreviousButton,
   onPrevious,
   skipApiSave = false
@@ -75,7 +66,7 @@ const EmploymentDetailsForm = ({
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     personalId: personalId,
-    employmentType: "employed",
+    employmentType: "Employed",
     occupation: "",
     contractType: "",
     contractDuration: "",
@@ -83,7 +74,6 @@ const EmploymentDetailsForm = ({
     employedSince: "",
   });
   const [initialLoading, setInitialLoading] = useState(true);
-  const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
   // Update personalId in formData if it changes
@@ -136,7 +126,7 @@ const EmploymentDetailsForm = ({
         // If 404, it means no employment details exist yet
         if (err.response?.status !== 404) {
           console.error("Failed to fetch employment details on personalId update:", err);
-          setError(safeTranslate("profile.fetchError", "Failed to load employment details. Please try again."));
+          //setError(safeTranslate("profile.fetchError", "Failed to load employment details. Please try again."));
         }
       } finally {
         setInitialLoading(false);
@@ -188,25 +178,10 @@ const EmploymentDetailsForm = ({
         return updatedData;
       });
       
-      // If we have employmentId, we're in update mode
-      if (initialData.employmentId) {
-        console.log("EmploymentDetailsForm: Setting to update mode with employmentId:", initialData.employmentId);
-        setIsUpdateMode(true);
-      }
-      
       setInitialLoading(false);
     }
   }, [initialData, personalId]);
 
-  // Check form completion status and set update mode accordingly
-  useEffect(() => {
-    if (profileComplete || showUpdateButton) {
-      setIsUpdateMode(true);
-    } else {
-      setIsUpdateMode(false);
-    }
-  }, [profileComplete, showUpdateButton]);
-  
   // Form validation with i18n messages
   const validateForm = () => {
     const errors = {};
@@ -260,7 +235,7 @@ const EmploymentDetailsForm = ({
       ...prevData,
       employmentType: value,
       // Reset employment-specific fields when changing type
-      ...(value !== "employed" && {
+      ...(value !== "Employed" && {
         employerName: "",
         contractType: "",
         contractDuration: "",
@@ -306,14 +281,47 @@ const EmploymentDetailsForm = ({
 
       let response;
       
-      // If we already have employmentId, update the existing record
-      if (formData.employmentId) {
-        console.log(`Updating existing employment details with employmentId: ${formData.employmentId}`);
-        response = await profileApi.updateEmploymentDetails(dataToSubmit);
+      // Check if we have an employmentId (from formData, initialData, or fetched data)
+      const existingEmploymentId = formData.employmentId || initialData?.employmentId;
+      
+      console.log("Existing employment ID:", existingEmploymentId);
+      if (existingEmploymentId) {
+        console.log(`Updating existing employment details with ID: ${existingEmploymentId}`);
+        // Update existing employment details
+        response = await profileApi.updateEmploymentDetails({
+          ...dataToSubmit,
+          employmentId: existingEmploymentId
+        });
       } else {
-        // Create new employment details
-        console.log("Creating new employment details");
-        response = await profileApi.saveEmploymentDetails(dataToSubmit);
+        // Check if employment details exist for this personalId
+        try {
+          console.log("Checking if employment details exist for personalId:", personalId);
+          const existingEmployment = await profileApi.getEmploymentDetails(personalId);
+          
+          if (existingEmployment && (existingEmployment.employmentId || existingEmployment.id)) {
+            console.log(`Employment details found, updating with ID: ${existingEmployment.employmentId || existingEmployment.id}`);
+            // Update existing employment details
+            response = await profileApi.updateEmploymentDetails({
+              ...dataToSubmit,
+              employmentId: existingEmployment.employmentId || existingEmployment.id
+            });
+          } else {
+            console.log("Creating new employment details - no existing data found");
+            // Create new employment details
+            response = await profileApi.saveEmploymentDetails(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No employment details found')) {
+            console.log("No existing employment details found, creating new");
+            response = await profileApi.saveEmploymentDetails(dataToSubmit);
+          } else {
+            console.error("Error checking for existing employment details:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new employment details after failed check");
+            response = await profileApi.saveEmploymentDetails(dataToSubmit);
+          }
+        }
       }
 
       console.log("Employment details saved successfully:", response);
@@ -347,39 +355,6 @@ const EmploymentDetailsForm = ({
     }
   };
   
-  // Handle Update button click
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    
-    // Validate form before submission
-    if (!validateForm()) {
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      // Prepare data for submission
-      const dataToSubmit = mapFormToBackendValues({
-        ...formData,
-        personalId
-      });
-      
-      // Update existing employment details
-      await profileApi.updateEmploymentDetails(dataToSubmit);
-      
-      // Call the parent update handler if provided
-      if (onUpdate) {
-        onUpdate();
-      }
-    } catch (err) {
-      console.error("Failed to update employment details:", err);
-      setError(safeTranslate("profile.updateError", "Failed to update data. Please try again."));
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (initialLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -461,7 +436,7 @@ const EmploymentDetailsForm = ({
                 value={formData.employerName}
                 onChange={handleChange}
                 className={validationErrors.employerName ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : ''}
-                required={formData.employmentType === "employed"}
+                required={formData.employmentType === "Employed"}
               />
               {validationErrors.employerName && (
                 <p className="text-sm text-red-500 mt-1">{validationErrors.employerName}</p>
@@ -482,7 +457,7 @@ const EmploymentDetailsForm = ({
                     ? 'border-red-500 bg-red-50 dark:bg-red-900/20' 
                     : 'border-input bg-background'
                 }`}
-                required={formData.employmentType === "employed"}
+                required={formData.employmentType === "Employed"}
               >
                 <option value="">{safeTranslate('common.select', 'Select...')}</option>
                 {CONTRACT_TYPE_OPTIONS.map(option => (
@@ -544,39 +519,20 @@ const EmploymentDetailsForm = ({
           {safeTranslate('common.back', 'Back')}
         </Button>
         
-        {showUpdateButton ? (
-          <Button 
-            type="button"
-            onClick={handleUpdate}
-            disabled={loading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {safeTranslate('common.updating', 'Updating...')}
-              </span>
-            ) : safeTranslate('common.update', 'Update')}
-          </Button>
-        ) : (
-          <Button 
-            type="submit" 
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {safeTranslate('common.saving', 'Saving...')}
-              </span>
-            ) : safeTranslate('common.next', 'Next')}
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {safeTranslate('common.saving', 'Saving...')}
+            </span>
+          ) : safeTranslate('common.next', 'Next')}
+        </Button>
       </div>
     </form>
   );

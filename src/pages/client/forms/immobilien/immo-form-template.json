@@ -121,12 +121,12 @@
             "validation": "string",
             "reference": "EmploymentDetailsForm.employmentType",
             "options": [
-              "employed",
-              "selfEmployed",
-              "unemployed",
-              "retired",
-              "student",
-              "other"
+              "Employed",
+              "SelfEmployed",
+              "Unemployed",
+              "Retired",
+              "Student",
+              "Other"
             ]
           },
           {

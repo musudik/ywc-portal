@@ -127,8 +127,6 @@ const ProfileSetup = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showUpdateButton, setShowUpdateButton] = useState(false);
-  const [selectedStep, setSelectedStep] = useState(null);
 
   // Section data states
   const [personalDetails, setPersonalDetails] = useState(null);
@@ -220,7 +218,7 @@ const ProfileSetup = () => {
         }
         
         if (userDetails.liabilities && userDetails.liabilities.length > 0) {
-          setLiabilitiesDetails(userDetails.liabilities[0]);
+          setLiabilitiesDetails(userDetails.liabilities);
         }
         
         if (userDetails.goalsAndWishes) {
@@ -281,24 +279,25 @@ const ProfileSetup = () => {
           }
           case 5: {
             const data = await profileApi.getLiabilities(personalId);
-            setLiabilitiesDetails(Array.isArray(data) ? data[0] : data);
+            setLiabilitiesDetails(data);
             break;
           }
           case 6: {
             const data = await profileApi.getGoalsAndWishes(personalId);
-            setGoalsAndWishesDetails(Array.isArray(data) ? data[0] : data);
+            setGoalsAndWishesDetails(data);
             break;
           }
           case 7: {
             const data = await profileApi.getRiskAppetite(personalId);
-            setRiskAppetiteDetails(Array.isArray(data) ? data[0] : data);
+            setRiskAppetiteDetails(data);
             break;
           }
           default:
             break;
         }
       } catch (err) {
-        setError('Failed to load section data.');
+        console.error("Failed to fetch section data:", err);
+        //setError('Failed to load section data.');
       } finally {
         setLoading(false);
       }
@@ -314,149 +313,14 @@ const ProfileSetup = () => {
     
     // In edit mode, always allow clicking on any step without additional conditions
     if (isEditMode) {
-      setSelectedStep(stepIndex);
       setCurrentStep(stepIndex);
-      setShowUpdateButton(true);
       return;
     }
     
     // For non-edit mode, only allow clicking on completed steps or the current step
     const currentStepFromContext = getCurrentStep();
     if (stepIndex <= currentStepFromContext || profileCompletion?.[Object.keys(profileCompletion)[stepIndex]]) {
-      setSelectedStep(stepIndex);
       setCurrentStep(stepIndex);
-      setShowUpdateButton(stepIndex < currentStepFromContext);
-    }
-  };
-
-  // Handle update button click
-  const handleUpdate = async () => {
-    setLoading(true);
-    try {
-      // Directly call the appropriate API based on the current step
-      switch (currentStep) {
-        case 0:
-          if (personalDetails) {
-            // Create a clean copy without nested objects
-            const cleanData = { ...personalDetails };
-            
-            // Extract IDs from nested objects
-            if (cleanData.coach && typeof cleanData.coach === 'object') {
-              cleanData.coachId = cleanData.coach.id;
-              delete cleanData.coach;
-            }
-            
-            // Remove user object (keep userId if needed)
-            if (cleanData.user && typeof cleanData.user === 'object') {
-              delete cleanData.user;
-            }
-            
-            await profileApi.updatePersonalDetails(cleanData);
-          }
-          break;
-        case 1:
-          if (employmentDetails) {
-            await profileApi.updateEmploymentDetails(employmentDetails);
-          }
-          break;
-        case 2:
-          if (incomeDetails) {
-            await profileApi.updateIncomeDetails(incomeDetails);
-          }
-          break;
-        case 3:
-          if (expensesDetails) {
-            await profileApi.updateExpensesDetails(expensesDetails);
-          }
-          break;
-        case 4:
-          if (assetsDetails) {
-            await profileApi.updateAssets(assetsDetails);
-          }
-          break;
-        case 5:
-          if (liabilitiesDetails) {
-            await profileApi.updateLiabilities(liabilitiesDetails);
-          }
-          break;
-        case 6:
-          if (goalsAndWishesDetails) {
-            await profileApi.updateGoalsAndWishes(goalsAndWishesDetails);
-          }
-          break;
-        case 7:
-          if (riskAppetiteDetails) {
-            await profileApi.updateRiskAppetite(riskAppetiteDetails);
-          }
-          break;
-        default:
-          break;
-      }
-      
-      // After updating, refresh the data for the current step
-      await refreshCurrentStepData();
-      
-      // Reset the update button state
-      setShowUpdateButton(false);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to update:", err);
-      setError(safeTranslate("profile.updateError", "Failed to update data. Please try again."));
-      setLoading(false);
-    }
-  };
-
-  // Add a new helper function to refresh data for the current step
-  const refreshCurrentStepData = async () => {
-    if (!personalId) return;
-    
-    try {
-      switch (currentStep) {
-        case 0: {
-          const data = await profileApi.getPersonalDetails(personalId);
-          setPersonalDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 1: {
-          const data = await profileApi.getEmploymentDetails(personalId);
-          setEmploymentDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 2: {
-          const data = await profileApi.getIncomeDetails(personalId);
-          setIncomeDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 3: {
-          const data = await profileApi.getExpensesDetails(personalId);
-          setExpensesDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 4: {
-          const data = await profileApi.getAssets(personalId);
-          setAssetsDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 5: {
-          const data = await profileApi.getLiabilities(personalId);
-          setLiabilitiesDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 6: {
-          const data = await profileApi.getGoalsAndWishes(personalId);
-          setGoalsAndWishesDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        case 7: {
-          const data = await profileApi.getRiskAppetite(personalId);
-          setRiskAppetiteDetails(Array.isArray(data) ? data[0] : data);
-          break;
-        }
-        default:
-          break;
-      }
-    } catch (err) {
-      console.error(`Failed to refresh data for step ${currentStep}:`, err);
     }
   };
 
@@ -568,9 +432,6 @@ const ProfileSetup = () => {
           onComplete={handleNextStep} 
           initialData={personalDetails} 
           id={user?.id}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 1:
@@ -579,9 +440,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId || ''}
           initialData={employmentDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 2:
@@ -590,9 +448,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={incomeDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 3:
@@ -601,9 +456,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={expensesDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 4:
@@ -612,9 +464,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={assetsDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 5:
@@ -623,9 +472,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={liabilitiesDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 6:
@@ -634,9 +480,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={goalsAndWishesDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       case 7:
@@ -645,9 +488,6 @@ const ProfileSetup = () => {
           onBack={handlePreviousStep} 
           personalId={personalId} 
           initialData={riskAppetiteDetails}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
       default:
@@ -655,9 +495,6 @@ const ProfileSetup = () => {
           onComplete={handleNextStep} 
           initialData={personalDetails} 
           id={user?.id}
-          showUpdateButton={showUpdateButton || isEditMode}
-          onUpdate={handleUpdate}
-          profileComplete={profileCompletion?.isComplete}
           isEditMode={isEditMode}
         />;
     }

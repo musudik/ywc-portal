@@ -117,14 +117,47 @@ const ExpensesDetailsForm = ({
 
       let response;
       
-      // If we already have expensesId, update the existing record
-      if (formData.expensesId) {
-        console.log(`Updating existing expenses with expensesId: ${formData.expensesId}`);
-        response = await profileApi.updateExpensesDetails(dataToSubmit);
+      // Check if we have an expensesId (from formData, initialData, or fetched data)
+      const existingExpensesId = formData.expensesId || initialData?.expensesId;
+      
+      console.log("Existing expenses ID:", existingExpensesId);
+      if (existingExpensesId) {
+        console.log(`Updating existing expenses details with ID: ${existingExpensesId}`);
+        // Update existing expenses details
+        response = await profileApi.updateExpensesDetails({
+          ...dataToSubmit,
+          expensesId: existingExpensesId
+        });
       } else {
-        // Create new expenses details
-        console.log("Creating new expenses details");
-        response = await profileApi.saveExpensesDetails(dataToSubmit);
+        // Check if expenses details exist for this personalId
+        try {
+          console.log("Checking if expenses details exist for personalId:", personalId);
+          const existingExpenses = await profileApi.getExpensesDetails(personalId);
+          
+          if (existingExpenses && (existingExpenses.expensesId || existingExpenses.id)) {
+            console.log(`Expenses details found, updating with ID: ${existingExpenses.expensesId || existingExpenses.id}`);
+            // Update existing expenses details
+            response = await profileApi.updateExpensesDetails({
+              ...dataToSubmit,
+              expensesId: existingExpenses.expensesId || existingExpenses.id
+            });
+          } else {
+            console.log("Creating new expenses details - no existing data found");
+            // Create new expenses details
+            response = await profileApi.saveExpensesDetails(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No expenses details found')) {
+            console.log("No existing expenses details found, creating new");
+            response = await profileApi.saveExpensesDetails(dataToSubmit);
+          } else {
+            console.error("Error checking for existing expenses details:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new expenses details after failed check");
+            response = await profileApi.saveExpensesDetails(dataToSubmit);
+          }
+        }
       }
 
       console.log("Expenses details saved successfully:", response);

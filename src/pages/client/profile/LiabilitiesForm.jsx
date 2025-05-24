@@ -276,13 +276,13 @@ const LiabilitiesForm = ({
     setError(null);
 
     try {
-      // Prepare data for submission
+      // Prepare data for submission - just return the current liabilities state
       const dataToSubmit = {
-        ...currentLiability,
-        loans: liabilities
+        personalId,
+        liabilities: liabilities // Send the current liabilities array
       };
 
-      console.log("Submitting liabilities details:", dataToSubmit);
+      console.log("Proceeding to next step with liabilities:", dataToSubmit);
 
       // If skipApiSave is true, skip the API calls and just return the data
       if (skipApiSave) {
@@ -292,22 +292,9 @@ const LiabilitiesForm = ({
         return;
       }
 
-      let response;
-      
-      // If we already have liabilitiesId, update the existing record
-      if (currentLiability.liabilityId) {
-        console.log(`Updating existing liabilities with liabilitiesId: ${currentLiability.liabilityId}`);
-        response = await profileApi.updateLiabilities(dataToSubmit);
-      } else {
-        // Create new liabilities
-        console.log("Creating new liabilities");
-        response = await profileApi.saveLiabilities(dataToSubmit);
-      }
-
-      console.log("Liabilities saved successfully:", response);
-      
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Individual liabilities are already saved/updated through handleSaveLiability
+      // So we just need to proceed to the next step with the current data
+      onComplete(dataToSubmit);
     } catch (err) {
       console.error("Failed to proceed:", err);
       setError("Failed to proceed. Please try again.");

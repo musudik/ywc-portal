@@ -5,18 +5,30 @@ const TOKEN_KEY = 'ywc_auth_token';
 const USER_KEY = 'ywc_user';
 const EXPIRY_KEY = 'ywc_token_expiry';
 
+// Add a flag to track if we're in the middle of clearing auth data
+let isClearing = false;
+
 /**
  * Save authentication data to localStorage
  */
 export const saveAuthData = (token: string, user: User, expiresIn: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  // Calculate expiry time
-  const expiryTime = new Date();
-  const expiryHours = parseInt(expiresIn.replace('h', ''), 10) || 1; // Default to 1 hour
-  expiryTime.setHours(expiryTime.getHours() + expiryHours);
-  localStorage.setItem(EXPIRY_KEY, expiryTime.toISOString());
+  try {
+    // Reset clearing flag when saving new auth data
+    isClearing = false;
+    
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    
+    // Calculate expiry time
+    const expiryTime = new Date();
+    const expiryHours = parseInt(expiresIn.replace('h', ''), 10) || 1; // Default to 1 hour
+    expiryTime.setHours(expiryTime.getHours() + expiryHours);
+    localStorage.setItem(EXPIRY_KEY, expiryTime.toISOString());
+    
+    console.log('Auth data saved successfully for user:', user.email);
+  } catch (error) {
+    console.error('Error saving auth data:', error);
+  }
 };
 
 /**
@@ -24,6 +36,12 @@ export const saveAuthData = (token: string, user: User, expiresIn: string): void
  */
 export const getToken = (): string | null => {
   try {
+    // If we're in the middle of clearing, don't return token
+    if (isClearing) {
+      console.log('Token retrieval blocked: auth data is being cleared');
+      return null;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY);
     const expiry = localStorage.getItem(EXPIRY_KEY);
     
@@ -64,6 +82,12 @@ export const getToken = (): string | null => {
  * Get the stored user data
  */
 export const getUser = (): User | null => {
+  // If we're in the middle of clearing, don't return user data
+  if (isClearing) {
+    console.log('User data retrieval blocked: auth data is being cleared');
+    return null;
+  }
+  
   const userJson = localStorage.getItem(USER_KEY);
   if (!userJson) return null;
   
@@ -79,9 +103,24 @@ export const getUser = (): User | null => {
  * Clear all authentication data from localStorage
  */
 export const clearAuthData = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
-  localStorage.removeItem(EXPIRY_KEY);
+  try {
+    // Set clearing flag to prevent race conditions
+    isClearing = true;
+    
+    console.log('Clearing authentication data...');
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(EXPIRY_KEY);
+    
+    // Small delay to ensure any pending requests see the clearing flag
+    setTimeout(() => {
+      isClearing = false;
+      console.log('Authentication data cleared successfully');
+    }, 100);
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+    isClearing = false;
+  }
 };
 
 /**

@@ -114,18 +114,36 @@ export const authApi = {
 
   // Logout user - just a helper to clear token from storage
   logout: (): void => {
+    console.log('Starting logout process...');
+    
     try {
       // Try to call the logout endpoint
-      api.post('/logout').catch(() => {
-        // Ignore errors - we're logging out anyway
-      });
+      // Use a timeout to prevent hanging during logout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      api.post('/logout', {}, { signal: controller.signal })
+        .then(() => {
+          console.log('Logout endpoint called successfully');
+        })
+        .catch((error) => {
+          // Ignore errors - we're logging out anyway
+          console.log('Logout endpoint failed (ignored):', error.message);
+        })
+        .finally(() => {
+          clearTimeout(timeoutId);
+        });
     } catch (e) {
       console.error('Error calling logout endpoint:', e);
-    } finally {
-      clearAuthData();
-      // Dispatch event to notify other parts of the app
-      window.dispatchEvent(new Event('auth:logout'));
     }
+    
+    // Clear auth data immediately regardless of API call result
+    clearAuthData();
+    
+    // Dispatch event to notify other parts of the app
+    window.dispatchEvent(new Event('auth:logout'));
+    
+    console.log('Logout process completed');
   },
 
   // Get current user

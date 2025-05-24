@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tokenRefreshing, setTokenRefreshing] = useState(false);
+  const [loginInProgress, setLoginInProgress] = useState(false);
 
   // Helper function to enhance user data with profile information
   const enhanceUserWithProfile = async (userData) => {
@@ -39,6 +40,8 @@ export const AuthProvider = ({ children }) => {
       return userData;
     } catch (error) {
       console.error("Error fetching personal details:", error);
+      // For new users without personal details, this is normal - don't fail the login
+      // Just return the user data without the personal details enhancement
       return userData;
     }
   };
@@ -169,14 +172,35 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async (credentials) => {
-    const response = await authApi.login(credentials);
-    console.log("Login successful, user data:", response.user);
+    // Prevent multiple simultaneous login attempts
+    if (loginInProgress) {
+      console.warn('Login already in progress, ignoring new attempt');
+      throw new Error('Login already in progress');
+    }
     
-    // Enhance user data with profile information after login
-    const enhancedUserData = await enhanceUserWithProfile(response.user);
-    setUser(enhancedUserData);
-    setIsLoggedIn(true);
-    return response;
+    setLoginInProgress(true);
+    
+    try {
+      console.log('Starting login process...');
+      const response = await authApi.login(credentials);
+      console.log("Login successful, user data:", response.user);
+      
+      // Enhance user data with profile information after login
+      const enhancedUserData = await enhanceUserWithProfile(response.user);
+      setUser(enhancedUserData);
+      setIsLoggedIn(true);
+      
+      console.log('Login process completed successfully');
+      return response;
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Ensure we're logged out on login failure
+      setUser(null);
+      setIsLoggedIn(false);
+      throw error;
+    } finally {
+      setLoginInProgress(false);
+    }
   };
 
   // Register function
@@ -188,9 +212,16 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     console.log("Logging out, clearing user data");
-    authApi.logout();
+    
+    // Clear user state immediately to prevent UI issues
     setUser(null);
     setIsLoggedIn(false);
+    setLoading(false);
+    
+    // Clear authentication data from storage
+    authApi.logout();
+    
+    console.log("Logout completed successfully");
   };
 
   // Context value

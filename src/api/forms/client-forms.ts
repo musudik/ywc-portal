@@ -135,37 +135,76 @@ export const getAllClientForms = async (): Promise<ApiResponse<ClientFormRespons
  * @returns The client form data
  */
 export const getClientFormById = async (
-  userId: string
+  formId: string
 ): Promise<ApiResponse<ClientFormResponse>> => {
   try {
-    console.log(`Fetching client form with ID: ${userId}`);
-    // First try with the id directly
-    try {
-      const response = await clientFormsApi.get(`/${userId}`);
-      console.log('Client form fetched successfully:', response.data);
-      
-      return {
-        success: true,
-        data: response.data,
-        message: 'Form fetched successfully'
-      };
-    } catch (directError) {
-      // If direct ID fails, try with /id/ prefix
-      console.log('Direct ID fetch failed, trying with /id/ prefix');
-      const response = await clientFormsApi.get(`/id/${userId}`);
-      console.log('Client form fetched successfully using /id/ prefix:', response.data);
-      
-      return {
-        success: true,
-        data: response.data,
-        message: 'Form fetched successfully'
-      };
-    }
+    console.log(`Fetching client form with ID: ${formId}`);
+    const response = await clientFormsApi.get(`/${formId}`);
+    console.log('Client form fetched successfully:', response.data);
+    
+    return {
+      success: true,
+      data: response.data,
+      message: 'Form fetched successfully'
+    };
   } catch (error: any) {
-    console.error(`Error fetching client form with ID ${userId}:`, error);
+    console.error(`Error fetching client form with ID ${formId}:`, error);
     return {
       success: false,
       message: error.response?.data?.message || 'An error occurred while fetching the form',
+      errors: error.response?.data?.errors,
+    };
+  }
+};
+
+/**
+ * Gets the latest client form for a specific user by form type
+ * @param formType The type of form to fetch (e.g., 'Immobilien')
+ * @returns The latest client form data for that type
+ */
+export const getLatestClientFormByType = async (
+  formType: string = 'Immobilien'
+): Promise<ApiResponse<ClientFormResponse>> => {
+  try {
+    console.log(`Fetching latest ${formType} form for current user`);
+    const allFormsResponse = await getAllClientForms();
+    
+    if (!allFormsResponse.success || !allFormsResponse.data) {
+      return {
+        success: false,
+        message: 'No forms found for user'
+      };
+    }
+    
+    // Find the latest form of the specified type
+    const formsOfType = allFormsResponse.data.filter(form => form.formType === formType);
+    
+    if (formsOfType.length === 0) {
+      return {
+        success: false,
+        message: `No ${formType} forms found for user`
+      };
+    }
+    
+    // Sort by updatedAt or createdAt to get the latest
+    const latestForm = formsOfType.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt || 0);
+      const dateB = new Date(b.updatedAt || b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    })[0];
+    
+    console.log('Latest form found:', latestForm);
+    
+    return {
+      success: true,
+      data: latestForm,
+      message: 'Latest form fetched successfully'
+    };
+  } catch (error: any) {
+    console.error(`Error fetching latest ${formType} form:`, error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'An error occurred while fetching the latest form',
       errors: error.response?.data?.errors,
     };
   }
@@ -182,9 +221,9 @@ export const updateClientForm = async (
   formData: ClientFormData
 ): Promise<ApiResponse<ClientFormResponse>> => {
   try {
-    console.log(`Updating client form with ID: ${formId}`, formData);
+    console.log(`PORTAL: Updating client form with ID: ${formId}`, formData);
     const response = await clientFormsApi.put(`/${formId}`, formData);
-    console.log('Client form updated successfully:', response.data);
+    console.log('PORTAL: Client form updated successfully:', response.data);
     
     return {
       success: true,
@@ -262,6 +301,7 @@ export const updateClientFormStatus = async (
 export default {
   createClientForm,
   getAllClientForms,
+  getLatestClientFormByType,
   getClientFormById,
   updateClientForm,
   deleteClientForm,

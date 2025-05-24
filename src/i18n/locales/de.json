@@ -144,11 +144,12 @@
       "description": "Bitte geben Sie Ihre Beschäftigungsinformationen an.",
       "employmentTypeLabel": "Beschäftigungsart",
       "employmentType": {
-        "employed": "Angestellt",
-        "selfEmployed": "Selbstständig",
-        "unemployed": "Arbeitslos",
-        "retired": "Im Ruhestand",
-        "student": "Student"
+        "Employed": "Angestellt",
+        "SelfEmployed": "Selbstständig",
+        "Unemployed": "Arbeitslos",
+        "Retired": "Im Ruhestand",
+        "Student": "Student",
+        "Other": "Sonstige"
       },
       "occupation": "Beruf",
       "contractTypeLabel": "Vertragsart",
@@ -457,12 +458,12 @@
           "switzerland": "Schweiz"
         },
         "employmentType": {
-          "employed": "Angestellt",
-          "selfEmployed": "Selbstständig",
-          "unemployed": "Arbeitslos",
-          "retired": "Im Ruhestand",
-          "student": "Student",
-          "other": "Sonstige"
+          "Employed": "Angestellt",
+          "SelfEmployed": "Selbstständig",
+          "Unemployed": "Arbeitslos",
+          "Retired": "Im Ruhestand",
+          "Student": "Student",
+          "Other": "Sonstige"
         },
         "contractType": {
           "permanent": "Unbefristet",

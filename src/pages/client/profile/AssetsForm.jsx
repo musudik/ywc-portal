@@ -114,14 +114,47 @@ const AssetsForm = ({
 
       let response;
       
-      // If we already have assetsId, update the existing record
-      if (formData.assetsId) {
-        console.log(`Updating existing assets with assetsId: ${formData.assetsId}`);
-        response = await profileApi.updateAssets(dataToSubmit);
+      // Check if we have an assetsId (from formData, initialData, or fetched data)
+      const existingAssetsId = formData.assetsId || initialData?.assetsId;
+      
+      console.log("Existing assets ID:", existingAssetsId);
+      if (existingAssetsId) {
+        console.log(`Updating existing assets with ID: ${existingAssetsId}`);
+        // Update existing assets
+        response = await profileApi.updateAssets({
+          ...dataToSubmit,
+          assetsId: existingAssetsId
+        });
       } else {
-        // Create new assets
-        console.log("Creating new assets");
-        response = await profileApi.saveAssets(dataToSubmit);
+        // Check if assets exist for this personalId
+        try {
+          console.log("Checking if assets exist for personalId:", personalId);
+          const existingAssets = await profileApi.getAssets(personalId);
+          
+          if (existingAssets && (existingAssets.assetsId || existingAssets.id)) {
+            console.log(`Assets found, updating with ID: ${existingAssets.assetsId || existingAssets.id}`);
+            // Update existing assets
+            response = await profileApi.updateAssets({
+              ...dataToSubmit,
+              assetsId: existingAssets.assetsId || existingAssets.id
+            });
+          } else {
+            console.log("Creating new assets - no existing data found");
+            // Create new assets
+            response = await profileApi.saveAssets(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No assets found')) {
+            console.log("No existing assets found, creating new");
+            response = await profileApi.saveAssets(dataToSubmit);
+          } else {
+            console.error("Error checking for existing assets:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new assets after failed check");
+            response = await profileApi.saveAssets(dataToSubmit);
+          }
+        }
       }
 
       console.log("Assets saved successfully:", response);

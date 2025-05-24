@@ -6,12 +6,10 @@ import { profileApi } from "../../../api";
 
 const IncomeDetailsForm = ({ 
   onComplete, 
-  onBack,
-  personalId,
+  onBack, 
+  personalId, 
   initialData,
-  showPreviousButton,
-  onPrevious,
-  skipApiSave = false
+  skipApiSave = false 
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -111,14 +109,47 @@ const IncomeDetailsForm = ({
 
       let response;
       
-      // If we already have incomeId, update the existing record
-      if (formData.incomeId) {
-        console.log(`Updating existing income details with incomeId: ${formData.incomeId}`);
-        response = await profileApi.updateIncomeDetails(dataToSubmit);
+      // Check if we have an incomeId (from formData, initialData, or fetched data)
+      const existingIncomeId = formData.incomeId || initialData?.incomeId;
+      
+      console.log("Existing income ID:", existingIncomeId);
+      if (existingIncomeId) {
+        console.log(`Updating existing income details with ID: ${existingIncomeId}`);
+        // Update existing income details
+        response = await profileApi.updateIncomeDetails({
+          ...dataToSubmit,
+          incomeId: existingIncomeId
+        });
       } else {
-        // Create new income details
-        console.log("Creating new income details");
-        response = await profileApi.saveIncomeDetails(dataToSubmit);
+        // Check if income details exist for this personalId
+        try {
+          console.log("Checking if income details exist for personalId:", personalId);
+          const existingIncome = await profileApi.getIncomeDetails(personalId);
+          
+          if (existingIncome && (existingIncome.incomeId || existingIncome.id)) {
+            console.log(`Income details found, updating with ID: ${existingIncome.incomeId || existingIncome.id}`);
+            // Update existing income details
+            response = await profileApi.updateIncomeDetails({
+              ...dataToSubmit,
+              incomeId: existingIncome.incomeId || existingIncome.id
+            });
+          } else {
+            console.log("Creating new income details - no existing data found");
+            // Create new income details
+            response = await profileApi.saveIncomeDetails(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No income details found')) {
+            console.log("No existing income details found, creating new");
+            response = await profileApi.saveIncomeDetails(dataToSubmit);
+          } else {
+            console.error("Error checking for existing income details:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new income details after failed check");
+            response = await profileApi.saveIncomeDetails(dataToSubmit);
+          }
+        }
       }
 
       console.log("Income details saved successfully:", response);

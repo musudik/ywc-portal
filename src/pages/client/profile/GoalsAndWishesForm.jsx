@@ -95,12 +95,48 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => 
       };
 
       let response;
-      if (formData.goalsAndWishesId) {
+      
+      // Check if we have a goalsAndWishesId (from formData, initialData, or fetched data)
+      const existingGoalsAndWishesId = formData.goalsAndWishesId || initialData?.goalsAndWishesId;
+      
+      console.log("Existing goals and wishes ID:", existingGoalsAndWishesId);
+      if (existingGoalsAndWishesId) {
+        console.log(`Updating existing goals and wishes with ID: ${existingGoalsAndWishesId}`);
         // Update existing goals and wishes
-        response = await profileApi.updateGoalsAndWishes(dataToSubmit);
+        response = await profileApi.updateGoalsAndWishes({
+          ...dataToSubmit,
+          goalsAndWishesId: existingGoalsAndWishesId
+        });
       } else {
-        // Create new goals and wishes
-        response = await profileApi.saveGoalsAndWishes(dataToSubmit);
+        // Check if goals and wishes exist for this personalId
+        try {
+          console.log("Checking if goals and wishes exist for personalId:", personalId);
+          const existingGoalsAndWishes = await profileApi.getGoalsAndWishes(personalId);
+          
+          if (existingGoalsAndWishes && (existingGoalsAndWishes.goalsAndWishesId || existingGoalsAndWishes.id)) {
+            console.log(`Goals and wishes found, updating with ID: ${existingGoalsAndWishes.goalsAndWishesId || existingGoalsAndWishes.id}`);
+            // Update existing goals and wishes
+            response = await profileApi.updateGoalsAndWishes({
+              ...dataToSubmit,
+              goalsAndWishesId: existingGoalsAndWishes.goalsAndWishesId || existingGoalsAndWishes.id
+            });
+          } else {
+            console.log("Creating new goals and wishes - no existing data found");
+            // Create new goals and wishes
+            response = await profileApi.saveGoalsAndWishes(dataToSubmit);
+          }
+        } catch (checkErr) {
+          // If we get a 404 or other error checking for existing data, create new
+          if (checkErr.response?.status === 404 || checkErr.message?.includes('No goals and wishes found')) {
+            console.log("No existing goals and wishes found, creating new");
+            response = await profileApi.saveGoalsAndWishes(dataToSubmit);
+          } else {
+            console.error("Error checking for existing goals and wishes:", checkErr);
+            // If check fails for other reasons, try to create
+            console.log("Creating new goals and wishes after failed check");
+            response = await profileApi.saveGoalsAndWishes(dataToSubmit);
+          }
+        }
       }
 
       // Call the onComplete callback with the response

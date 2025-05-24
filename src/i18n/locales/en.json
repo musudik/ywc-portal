@@ -230,12 +230,12 @@
       "description": "Please provide your employment information.",
       "employmentTypeLabel": "Employment Type",
       "employmentType": {
-        "employed": "employed",
-        "selfEmployed": "selfEmployed",
-        "unemployed": "unemployed",
-        "retired": "retired",
-        "student": "student",
-        "other": "other"
+        "Employed": "Employed",
+        "SelfEmployed": "Self Employed",
+        "Unemployed": "Unemployed",
+        "Retired": "Retired",
+        "Student": "Student",
+        "Other": "Other"
       },
       "occupation": "Occupation",
       "contractTypeLabel": "Contract Type",
@@ -527,12 +527,12 @@
           "switzerland": "Switzerland"
         },
         "employmentType": {
-          "employed": "Employed",
-          "selfEmployed": "Self-Employed",
-          "unemployed": "Unemployed",
-          "retired": "Retired",
-          "student": "Student",
-          "other": "Other"
+          "Employed": "Employed",
+          "SelfEmployed": "Self Employed",
+          "Unemployed": "Unemployed",
+          "Retired": "Retired",
+          "Student": "Student",
+          "Other": "Other"
         },
         "contractType": {
           "permanent": "Permanent",

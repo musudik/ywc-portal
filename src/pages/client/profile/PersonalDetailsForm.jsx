@@ -15,9 +15,6 @@ const PersonalDetailsForm = ({
   onComplete, 
   initialData, 
   id, 
-  showUpdateButton, 
-  onUpdate, 
-  profileComplete,
   skipApiSave = false
 }) => {
   const { t } = useTranslation();
@@ -26,7 +23,7 @@ const PersonalDetailsForm = ({
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     coachId: "",
-    applicantType: "primary",
+    applicantType: "",
     firstName: "",
     lastName: "",
     streetAddress: "",
@@ -63,7 +60,7 @@ const PersonalDetailsForm = ({
           maritalStatus: initialData.maritalStatus || prevData.maritalStatus || "",
           nationality: initialData.nationality || prevData.nationality || "",
           housing: initialData.housing || prevData.housing || "",
-          applicantType: initialData.applicantType || prevData.applicantType || "primary",
+          applicantType: initialData.applicantType || prevData.applicantType || "",
           id: initialData.id || id || prevData.id,
         };
         
@@ -128,7 +125,7 @@ const PersonalDetailsForm = ({
               maritalStatus: personalDetails.maritalStatus || prevData.maritalStatus || "",
               nationality: personalDetails.nationality || prevData.nationality || "",
               housing: personalDetails.housing || prevData.housing || "",
-              applicantType: personalDetails.applicantType || prevData.applicantType || "primary",
+              applicantType: personalDetails.applicantType || prevData.applicantType || "",
               id: personalDetails.id || id || prevData.id,
             };
             
@@ -173,18 +170,10 @@ const PersonalDetailsForm = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Special handling for coach field
-    if (name === 'coach') {
-      setFormData(prevData => ({
-        ...prevData,
-        coachId: value // Update the coachId field when coach field changes
-      }));
-    } else {
-      setFormData(prevData => ({
-        ...prevData,
-        [name]: value
-      }));
-    }
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
   };
 
   // Handle form submission
@@ -197,8 +186,6 @@ const PersonalDetailsForm = ({
       // Prepare data for submission
       const dataToSubmit = {
         ...formData,
-        // If no coachId is provided, use a default or empty value
-        coach: formData.coachId || "unassigned",
         // Ensure userId is included
         userId: formData.id || id
       };
@@ -215,16 +202,16 @@ const PersonalDetailsForm = ({
 
       let response;
       
-      // First, check if we have a personalId from either formData or initialData
-      const personalId = dataToSubmit.user?.id;
+      // Check if we have an ID (either from formData.id, formData.personalId, or initialData)
+      const existingId = formData.id || formData.personalId || initialData?.id || initialData?.personalId;
       
-      console.log("User ID:", personalId);
-      if (personalId) {
-        console.log(`Updating existing personal details with personalId: ${personalId}`);
+      console.log("Existing ID:", existingId);
+      if (existingId) {
+        console.log(`Updating existing personal details with ID: ${existingId}`);
         // Update existing personal details
         response = await profileApi.updatePersonalDetails({
           ...dataToSubmit,
-          personalId: personalId
+          id: existingId
         });
       } else {
         // Check if user exists by userId (which should be available from props)
@@ -243,12 +230,12 @@ const PersonalDetailsForm = ({
             existingUser = existingUsers;
           }
           
-          if (existingUser && existingUser.personalId) {
-            console.log(`User already exists with personalId: ${existingUser.personalId}`);
+          if (existingUser && (existingUser.id || existingUser.personalId)) {
+            console.log(`User already exists with ID: ${existingUser.id || existingUser.personalId}`);
             // Update existing user
             response = await profileApi.updatePersonalDetails({
               ...dataToSubmit,
-              personalId: existingUser.personalId
+              id: existingUser.id || existingUser.personalId
             });
           } else {
             console.log("Creating new personal details - no existing user found");
@@ -309,6 +296,7 @@ const PersonalDetailsForm = ({
               className="w-full rounded-md border border-input bg-background px-3 py-2"
               required
             >
+              <option value="">{safeTranslate('common.select', 'Select...')}</option>
               {APPLICANT_TYPE_OPTIONS.map(option => (
                 <option key={option} value={option}>
                   {safeTranslate(`profile.personalDetails.applicantTypeOptions.${option}`, option.charAt(0).toUpperCase() + option.slice(1).replace(/([A-Z])/g, ' $1').trim())}
@@ -318,12 +306,12 @@ const PersonalDetailsForm = ({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="coach" className="block text-sm font-medium">
+            <label htmlFor="coachId" className="block text-sm font-medium">
               {safeTranslate('profile.personalDetails.coachId')} *
             </label>
             <Input
-              id="coach"
-              name="coach"
+              id="coachId"
+              name="coachId"
               value={formData.coachId}
               onChange={handleChange}
               required
@@ -507,39 +495,20 @@ const PersonalDetailsForm = ({
       )}
 
       <div className="flex justify-end pt-4">
-        {profileComplete ? (
-          <Button 
-            type="button"
-            onClick={onUpdate}
-            disabled={loading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t('common.updating', 'Updating...')}
-              </span>
-            ) : t('common.update', 'Update')}
-          </Button>
-        ) : (
-          <Button 
-            type="submit" 
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t('common.saving', 'Saving...')}
-              </span>
-            ) : t('common.next', 'Next')}
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {t('common.saving', 'Saving...')}
+            </span>
+          ) : t('common.next', 'Next')}
+        </Button>
       </div>
     </form>
   );

@@ -51,6 +51,8 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   } else {
     console.warn(`API request to ${config.url} has no authorization token`);
+    // For critical requests, we might want to reject them if no token is available
+    // but for now, let them proceed and let the server handle the 401
   }
   return config;
 }, (error) => {
@@ -65,6 +67,8 @@ businessApi.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   } else {
     console.warn(`Business API request to ${config.url} has no authorization token`);
+    // For critical requests, we might want to reject them if no token is available
+    // but for now, let them proceed and let the server handle the 401
   }
   return config;
 }, (error) => {
@@ -147,7 +151,7 @@ export const profileApi = {
   },
 
   // Personal Details
-  getPersonalDetails: async (personalId?: string): Promise<PersonalDetailsInput> => {
+  getPersonalDetails: async (personalId?: string): Promise<PersonalDetailsInput | null> => {
     try {
       let response;
       if (personalId) {
@@ -168,8 +172,8 @@ export const profileApi = {
           console.log("Personal details received as array, returning first item:", data[0]);
           return data[0];
         } else {
-          console.log("Personal details array is empty");
-          throw new Error("No personal details found");
+          console.log("Personal details array is empty - user hasn't created personal details yet");
+          return null; // Return null instead of throwing error for new users
         }
       }
       

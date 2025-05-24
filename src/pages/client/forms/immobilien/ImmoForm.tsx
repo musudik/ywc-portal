@@ -8,17 +8,20 @@ import { useAuth } from "../../../../contexts/AuthContext";
 
 // Import FormLayout
 import FormLayout from '../../../../components/layouts/FormLayout';
+import { ImmobilienFormData } from '../../model/client';
+import { createEmptyImmobilienForm, mapToApiFormat  } from './immo-form-data';
 
-// Import the form data types and functions
-import { 
-  ImmobilienFormData, 
-  createEmptyImmobilienForm, 
-  mapToApiFormat 
-} from './immo-form-data';
+// Import mapping functions from the centralized model
+import {
+  mapPersonalDetailsFromApi,
+  mapIncomeDetailsFromApi,
+  mapExpensesDetailsFromApi,
+  mapAssetsFromApi
+} from '../../model/client';
 
 // Import API functions
 import { profileApi } from '../../../../api/profile';
-import { createClientForm, updateClientForm, getClientFormById, getAllClientForms } from '../../../../api/forms/client-forms';
+import { createClientForm, updateClientForm, getClientFormById, getAllClientForms, getLatestClientFormByType } from '../../../../api/forms/client-forms';
 
 // Import form sections
 import PersonalDetailsForm from './sections/PersonalDetailsForm';
@@ -114,172 +117,202 @@ const ImmoForm: React.FC = () => {
   const [secondaryPersonalId, setSecondaryPersonalId] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
 
-  // Load form data if formId is provided
-  useEffect(() => {
-    const loadFormData = async () => {
-      setLoading(true);
-      let userId = user?.id;
-      console.log('Loading form with ID:', userId);
+    // Load form data if formId is provided
+    useEffect(() => {
+      const loadFormData = async () => {
+        setLoading(true);
+        console.log('Loading form - formId from URL:', formId);
 
-      try {
-        if (userId) {
-          // Load existing form
-          console.log('Loading form with ID:', userId);
-          
-          // First try to get the form with the provided userId
-          let response = await getClientFormById(userId);
-          
-          // If that fails, it might be that we need to use 'id' instead of 'formId'
-          if (!response.success) {
-            console.log('Failed to load form with provided ID, checking if it might be the "id" field instead of "formId"');
+        try {
+          if (formId) {
+            // Load existing form by its specific ID
+            console.log('Loading existing form with ID:', formId);
             
-            // Try to get all forms first
-            const allFormsResponse = await getAllClientForms();
-            if (allFormsResponse.success && Array.isArray(allFormsResponse.data)) {
-              // Find the form with matching formId or id
-              const matchingForm = allFormsResponse.data.find(form => 
-                form.formId === formId || form.id === formId);
+            const response = await getClientFormById(formId);
+            
+            if (response.success && response.data) {
+              console.log('Loaded form data from database:', response.data);
               
-              if (matchingForm) {
-                console.log('Found matching form in all forms list:', matchingForm);
-                response = {
-                  success: true,
-                  data: matchingForm,
-                  message: 'Form found in list of all forms'
-                };
+              // Handle different response structures - form data might be directly in response.data 
+              // or nested in response.data.formData
+              let formDataContent;
+              
+              if (response.data.formData) {
+                // If the form data is nested in a formData property
+                formDataContent = response.data.formData;
+                console.log('Form data found in response.data.formData');
+              } else {
+                // If the form data is directly in the response
+                formDataContent = response.data;
+                console.log('Using form data directly from response.data');
               }
-            }
-          }
-          
-          if (response.success && response.data) {
-            console.log('Loaded form data from database:', response.data);
-            
-            // Handle different response structures - form data might be directly in response.data 
-            // or nested in response.data.formData
-            let formDataContent;
-            
-            if (response.data.formData) {
-              // If the form data is nested in a formData property
-              formDataContent = response.data.formData;
-              console.log('Form data found in response.data.formData');
-            } else {
-              // If the form data is directly in the response
-              formDataContent = response.data;
-              console.log('Using form data directly from response.data');
-            }
-            
-            // Store the form metadata separately to use when updating
-            const metadata: FormMetadata = {
-              formId: response.data.formId || response.data.id,
-              userId: response.data.userId,
-              createdAt: response.data.createdAt,
-              updatedAt: response.data.updatedAt,
-              status: response.data.status || 'Draft'
-            };
-            
-            console.log('Form metadata:', metadata);
-            setFormMetadata(metadata);
-            
-            // Set the form data
-            setFormData(formDataContent);
-            
-            // Update single applicant status based on the presence of a secondary applicant
-            setSingleApplicant(!formDataContent.secondaryApplicant);
-          } else {
-            throw new Error(response.message || 'Failed to load form data');
-          }
-        } else {
-          // Create new form with empty data
-          const newForm = createEmptyImmobilienForm();
-          
-          try {
-            // Load personal details
-            const personalDetails = await profileApi.getPersonalDetails();
-            if (personalDetails) {
-              newForm.primaryApplicant.personal = {
-                ...newForm.primaryApplicant.personal,
-                ...personalDetails,
-                applicantType: 'PrimaryApplicant',
-                personalId: personalDetails.id
+              
+              // Store the form metadata separately to use when updating
+              const metadata: FormMetadata = {
+                formId: response.data.formId || response.data.id,
+                userId: response.data.userId,
+                createdAt: response.data.createdAt,
+                updatedAt: response.data.updatedAt,
+                status: response.data.status || 'Draft'
               };
               
-              // If we have personal ID, load other sections
-              if (personalDetails.id) {
-                try {
-                  // Load employment details
-                  const employmentDetails = await profileApi.getEmploymentDetails(personalDetails.id);
-                  newForm.primaryApplicant.employment = {
-                    ...newForm.primaryApplicant.employment,
-                    ...employmentDetails,
-                    personalId: personalDetails.id
-                  };
-                } catch (e) {
-                  console.log('Employment details not found, using defaults');
-                }
+              console.log('Form metadata:', metadata);
+              setFormMetadata(metadata);
+              
+              // Set the form data
+              setFormData(formDataContent);
+              
+              // Update single applicant status based on the presence of a secondary applicant
+              setSingleApplicant(!formDataContent.secondaryApplicant);
+            } else {
+              throw new Error(response.message || 'Failed to load form data');
+            }
+          } else {
+            // No specific form ID provided, try to load the latest Immobilien form for this user
+            console.log('No form ID provided, checking for existing Immobilien forms');
+            
+            try {
+              const allFormsResponse = await getAllClientForms();
+              if (allFormsResponse.success && Array.isArray(allFormsResponse.data)) {
+                // Find the latest Immobilien form for this user
+                const immobilienForms = allFormsResponse.data.filter(form => form.formType === 'Immobilien');
                 
-                try {
-                  // Load income details
-                  const incomeDetails = await profileApi.getIncomeDetails(personalDetails.id);
-                  newForm.primaryApplicant.income = {
-                    ...newForm.primaryApplicant.income,
-                    ...incomeDetails,
-                    personalId: personalDetails.id
+                if (immobilienForms.length > 0) {
+                  // Sort by updatedAt or createdAt to get the latest
+                  const latestForm = immobilienForms.sort((a, b) => {
+                    const dateA = new Date(a.updatedAt || a.createdAt || 0);
+                    const dateB = new Date(b.updatedAt || b.createdAt || 0);
+                    return dateB.getTime() - dateA.getTime();
+                  })[0];
+                  
+                  console.log('Found existing Immobilien form, loading:', latestForm);
+                  
+                  // Set form metadata
+                  const metadata: FormMetadata = {
+                    formId: latestForm.formId || latestForm.id,
+                    userId: latestForm.userId,
+                    createdAt: latestForm.createdAt,
+                    updatedAt: latestForm.updatedAt,
+                    status: latestForm.status || 'Draft'
                   };
-                } catch (e) {
-                  console.log('Income details not found, using defaults');
-                }
-                
-                try {
-                  // Load expenses details
-                  const expensesDetails = await profileApi.getExpensesDetails(personalDetails.id);
-                  newForm.primaryApplicant.expenses = {
-                    ...newForm.primaryApplicant.expenses,
-                    ...expensesDetails,
-                    personalId: personalDetails.id
-                  };
-                } catch (e) {
-                  console.log('Expenses details not found, using defaults');
-                }
-                
-                try {
-                  // Load assets
-                  const assets = await profileApi.getAssets(personalDetails.id);
-                  newForm.primaryApplicant.assets = {
-                    ...newForm.primaryApplicant.assets,
-                    ...assets,
-                    personalId: personalDetails.id
-                  };
-                } catch (e) {
-                  console.log('Assets not found, using defaults');
-                }
-                
-                try {
-                  // Load liabilities
-                  const liabilities = await profileApi.getLiabilities(personalDetails.id);
-                  if (liabilities && liabilities.length > 0) {
-                    newForm.primaryApplicant.liabilities = liabilities[0];
-                  }
-                } catch (e) {
-                  console.log('Liabilities not found, using defaults');
+                  setFormMetadata(metadata);
+                  
+                  // Load form data
+                  const formDataContent = latestForm.formData || latestForm;
+                  setFormData(formDataContent);
+                  setSingleApplicant(!formDataContent.secondaryApplicant);
+                  
+                  setLoading(false);
+                  return;
                 }
               }
+            } catch (error) {
+              console.log('No existing forms found, creating new form');
             }
-          } catch (e) {
-            console.error('Error loading profile data:', e);
+            
+            // Create new form with empty data and prepopulate from profile
+            console.log('Creating new form and loading profile data for prepopulation');
+            const newForm = createEmptyImmobilienForm();
+            
+            try {
+              // Load personal details
+              const personalDetails = await profileApi.getPersonalDetails();
+              if (personalDetails) {
+                newForm.primaryApplicant.personal = {
+                  ...newForm.primaryApplicant.personal,
+                  ...personalDetails,
+                  applicantType: 'PrimaryApplicant',
+                  personalId: personalDetails.id
+                };
+                
+                // If we have personal ID, load other sections
+                if (personalDetails.id) {
+                  try {
+                    // Load employment details
+                    const employmentDetails = await profileApi.getEmploymentDetails(personalDetails.id);
+                    if (employmentDetails) {
+                      newForm.primaryApplicant.employment = {
+                        ...newForm.primaryApplicant.employment,
+                        ...employmentDetails,
+                        personalId: personalDetails.id
+                      };
+                    }
+                  } catch (e) {
+                    console.log('Employment details not found, using defaults');
+                  }
+                  
+                  try {
+                    // Load income details using mapping function
+                    const incomeDetails = await profileApi.getIncomeDetails(personalDetails.id);
+                    if (incomeDetails) {
+                      const mappedIncome = mapIncomeDetailsFromApi(incomeDetails);
+                      newForm.primaryApplicant.income = {
+                        ...newForm.primaryApplicant.income,
+                        ...mappedIncome,
+                        personalId: personalDetails.id
+                      };
+                    }
+                  } catch (e) {
+                    console.log('Income details not found, using defaults');
+                  }
+                  
+                  try {
+                    // Load expenses details using mapping function
+                    const expensesDetails = await profileApi.getExpensesDetails(personalDetails.id);
+                    if (expensesDetails) {
+                      const mappedExpenses = mapExpensesDetailsFromApi(expensesDetails);
+                      newForm.primaryApplicant.expenses = {
+                        ...newForm.primaryApplicant.expenses,
+                        ...mappedExpenses,
+                        personalId: personalDetails.id
+                      };
+                    }
+                  } catch (e) {
+                    console.log('Expenses details not found, using defaults');
+                  }
+                  
+                  try {
+                    // Load assets using mapping function
+                    const assets = await profileApi.getAssets(personalDetails.id);
+                    if (assets) {
+                      const mappedAssets = mapAssetsFromApi(assets);
+                      newForm.primaryApplicant.assets = {
+                        ...newForm.primaryApplicant.assets,
+                        ...mappedAssets,
+                        personalId: personalDetails.id
+                      };
+                    }
+                  } catch (e) {
+                    console.log('Assets not found, using defaults');
+                  }
+                  
+                  try {
+                    // Load liabilities
+                    const liabilities = await profileApi.getLiabilities(personalDetails.id);
+                    if (liabilities && liabilities.length > 0) {
+                      newForm.primaryApplicant.liabilities = liabilities[0];
+                    }
+                  } catch (e) {
+                    console.log('Liabilities not found, using defaults');
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Error loading profile data for prepopulation:', e);
+            }
+            
+            setFormData(newForm);
           }
-          
-          setFormData(newForm);
+        } catch (error) {
+          console.error('Error loading form:', error);
+          setError(t('forms.immobilien.errors.loadingFailed'));
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error loading form:', error);
-        setError(t('forms.immobilien.errors.loadingFailed'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadFormData();
-  }, [formId, t]);
+      };
+      
+      loadFormData();
+    }, [formId, t]);
 
   // Calculate progress
   useEffect(() => {
@@ -472,15 +505,15 @@ const ImmoForm: React.FC = () => {
   };
 
   // Update form data when fields change
-  const handleFormChange = (section: string, subsection: string, applicantType: 'primary' | 'secondary', data: any) => {
+  const handleFormChange = (section: string, subsection: string, applicantType: 'primaryApplicant' | 'secondaryApplicant', data: any) => {
     const updatedFormData = { ...formData };
     
-    if (applicantType === 'primary') {
+    if (applicantType === 'primaryApplicant') {
       updatedFormData.primaryApplicant[section] = {
         ...updatedFormData.primaryApplicant[section],
         ...data
       };
-    } else if (applicantType === 'secondary' && updatedFormData.secondaryApplicant) {
+    } else if (applicantType === 'secondaryApplicant' && updatedFormData.secondaryApplicant) {
       updatedFormData.secondaryApplicant[section] = {
         ...updatedFormData.secondaryApplicant[section],
         ...data
@@ -541,39 +574,48 @@ const ImmoForm: React.FC = () => {
         delete apiData.formId;
         console.log(`Updating form with ID ${formId}, removed formId from request body`);
       } 
-      else if (formId) {
+      else if (formMetadata.formId) {
         // For new forms where we have metadata but no URL formId yet
-        apiData.formId = formId;
-        console.log(`Using formId ${formId} from metadata for new form`);
+        apiData.formId = formMetadata.formId;
+        console.log(`Using formId ${formMetadata.formId} from metadata for new form`);
       }
       
       // Include userId in all requests
       if (formMetadata.userId) {
         apiData.userId = formMetadata.userId;
         console.log(`Including userId ${formMetadata.userId} in request`);
+      } else if (user?.id) {
+        apiData.userId = user.id;
+        console.log(`Including current user ID ${user.id} in request`);
       }
       
       // Create or update form
       let response;
-      if (formId) {
-        response = await updateClientForm(formId, apiData);
+      if (formId || formMetadata.formId) {
+        // Update existing form using the correct form ID
+        const actualFormId = formId || formMetadata.formId;
+        console.log(`Updating existing form with ID: ${actualFormId}`);
+        response = await updateClientForm(actualFormId, apiData);
       } else {
+        // Create new form
+        console.log('Creating new form');
         response = await createClientForm(apiData);
-        // If this is a new form, store the newly created form ID
-        if (response.success && response.data) {
-          const newFormId = response.data.id || response.data.formId;
-          if (newFormId) {
-            console.log(`New form created with ID: ${newFormId}`);
-            setFormMetadata({
-              ...formMetadata,
-              formId: newFormId,
-              userId: response.data.userId,
-              createdAt: response.data.createdAt,
-              updatedAt: response.data.updatedAt,
-              status: response.data.status
-            });
-            window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
-          }
+      }
+      
+      // If this is a new form, store the newly created form ID
+      if (response.success && response.data) {
+        const newFormId = response.data.id || response.data.formId;
+        if (newFormId) {
+          console.log(`New form created with ID: ${newFormId}`);
+          setFormMetadata({
+            ...formMetadata,
+            formId: newFormId,
+            userId: response.data.userId,
+            createdAt: response.data.createdAt,
+            updatedAt: response.data.updatedAt,
+            status: response.data.status
+          });
+          window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
         }
       }
       
@@ -663,25 +705,31 @@ const ImmoForm: React.FC = () => {
       
       // Create or update form
       let response;
-      if (user?.id) {
-        response = await updateClientForm(user?.id, apiData);
+      if (formId || formMetadata.formId) {
+        // Update existing form using the correct form ID
+        const actualFormId = formId || formMetadata.formId;
+        console.log(`Updating existing form with ID: ${actualFormId}`);
+        response = await updateClientForm(actualFormId, apiData);
       } else {
+        // Create new form
+        console.log('Creating new form');
         response = await createClientForm(apiData);
-        // If this is a new form, store the newly created form ID
-        if (response.success && response.data) {
-          const newFormId = response.data.id || response.data.formId;
-          if (newFormId) {
-            console.log(`New form submitted with ID: ${newFormId}`);
-            setFormMetadata({
-              ...formMetadata,
-              formId: newFormId,
-              userId: response.data.userId,
-              createdAt: response.data.createdAt,
-              updatedAt: response.data.updatedAt,
-              status: response.data.status
-            });
-            window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
-          }
+      }
+      
+      // If this is a new form, store the newly created form ID
+      if (response.success && response.data) {
+        const newFormId = response.data.id || response.data.formId;
+        if (newFormId) {
+          console.log(`New form submitted with ID: ${newFormId}`);
+          setFormMetadata({
+            ...formMetadata,
+            formId: newFormId,
+            userId: response.data.userId,
+            createdAt: response.data.createdAt,
+            updatedAt: response.data.updatedAt,
+            status: response.data.status
+          });
+          window.history.replaceState(null, '', `/client/forms/immobilien/${newFormId}`);
         }
       }
       
@@ -795,17 +843,21 @@ const ImmoForm: React.FC = () => {
       cleanedData.primaryApplicant.income = {
         monthlyNetIncome: Number(formData.primaryApplicant.income.monthlyNetIncome) || 0,
         annualGrossIncome: Number(formData.primaryApplicant.income.annualGrossIncome) || 0,
-        personalId: formData.primaryApplicant.income.personalId
+        personalId: formData.primaryApplicant.income.personalId,
+        grossIncome: Number(formData.primaryApplicant.income.grossIncome) || 0,
+        netIncome: Number(formData.primaryApplicant.income.netIncome) || 0,
+        taxClass: formData.primaryApplicant.income.taxClass || '',
+        taxId: formData.primaryApplicant.income.taxId || '',
+        numberOfSalaries: Number(formData.primaryApplicant.income.numberOfSalaries) || 0,
+        childBenefit: Number(formData.primaryApplicant.income.childBenefit) || 0,
+        otherIncome: Number(formData.primaryApplicant.income.otherIncome) || 0,
+        incomeTradeBusiness: Number(formData.primaryApplicant.income.incomeTradeBusiness) || 0,
+        incomeSelfEmployedWork: Number(formData.primaryApplicant.income.incomeSelfEmployedWork) || 0,
+        incomeSideJob: Number(formData.primaryApplicant.income.incomeSideJob) || 0,
+        additionalIncomeSource: formData.primaryApplicant.income.additionalIncomeSource || '',
+        rentalIncome: Number(formData.primaryApplicant.income.rentalIncome) || 0,
+        investmentIncome: Number(formData.primaryApplicant.income.investmentIncome) || 0,
       };
-      
-      // Add optional income fields only if they exist and are not zero
-      if (formData.primaryApplicant.income.additionalIncome) {
-        cleanedData.primaryApplicant.income.additionalIncome = Number(formData.primaryApplicant.income.additionalIncome);
-      }
-      
-      if (formData.primaryApplicant.income.additionalIncomeSource) {
-        cleanedData.primaryApplicant.income.additionalIncomeSource = formData.primaryApplicant.income.additionalIncomeSource;
-      }
       
       // Clean expenses details
       cleanedData.primaryApplicant.expenses = {
@@ -1010,7 +1062,21 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <PersonalDetailsForm
-                data={formData.primaryApplicant.personal}
+                data={{
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  phoneNumber: '',
+                  dateOfBirth: '',
+                  address: '',
+                  city: '',
+                  postalCode: '',
+                  country: 'Germany',
+                  maritalStatus: '',
+                  numberOfDependents: 0,
+                  applicantType: 'PrimaryApplicant',
+                  ...(formData.primaryApplicant?.personal || {})
+                }}
                 onChange={(data) => handleFormChange('personal', '', 'primary', data)}
                 title={t('forms.immobilien.sections.personalDetails.primaryTitle')}
               />
@@ -1030,7 +1096,7 @@ const ImmoForm: React.FC = () => {
                     address: '',
                     city: '',
                     postalCode: '',
-                    country: '',
+                    country: 'Germany',
                     maritalStatus: '',
                     numberOfDependents: 0,
                     applicantType: 'SecondaryApplicant',
@@ -1055,7 +1121,14 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <EmploymentDetailsForm
-                data={formData.primaryApplicant.employment}
+                data={{
+                  employmentType: 'employed',
+                  occupation: '',
+                  employerName: '',
+                  contractType: '',
+                  employedSince: '',
+                  ...(formData.primaryApplicant?.employment || {})
+                }}
                 onChange={(data) => handleFormChange('employment', '', 'primary', data)}
                 title={t('forms.immobilien.sections.employmentDetails.primaryTitle')}
               />
@@ -1093,7 +1166,11 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <IncomeDetailsForm
-                data={formData.primaryApplicant.income}
+                data={{
+                  monthlyNetIncome: 0,
+                  annualGrossIncome: 0,
+                  ...(formData.primaryApplicant?.income || {})
+                }}
                 onChange={(data) => handleFormChange('income', '', 'primary', data)}
                 title={t('forms.immobilien.sections.incomeDetails.primaryTitle')}
               />
@@ -1128,7 +1205,14 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <ExpensesDetailsForm
-                data={formData.primaryApplicant.expenses}
+                data={{
+                  housingExpenses: 0,
+                  utilityBills: 0,
+                  insurancePayments: 0,
+                  transportationCosts: 0,
+                  livingExpenses: 0,
+                  ...(formData.primaryApplicant?.expenses || {})
+                }}
                 onChange={(data) => handleFormChange('expenses', '', 'primary', data)}
                 title={t('forms.immobilien.sections.expensesDetails.primaryTitle')}
               />
@@ -1166,7 +1250,10 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <AssetsForm
-                data={formData.primaryApplicant.assets}
+                data={{
+                  cashAndSavings: 0,
+                  ...(formData.primaryApplicant?.assets || {})
+                }}
                 onChange={(data) => handleFormChange('assets', '', 'primary', data)}
                 title={t('forms.immobilien.sections.assets.primaryTitle')}
               />
@@ -1200,7 +1287,7 @@ const ImmoForm: React.FC = () => {
               maxWidth: { xs: '100%', md: singleApplicant ? '100%' : '48%' }
             }}>
               <LiabilitiesForm
-                data={formData.primaryApplicant.liabilities}
+                data={formData.primaryApplicant?.liabilities || {}}
                 onChange={(data) => handleFormChange('liabilities', '', 'primary', data)}
                 title={t('forms.immobilien.sections.liabilities.primaryTitle')}
               />
@@ -1222,7 +1309,7 @@ const ImmoForm: React.FC = () => {
       case 6: // Property Details
         return (
           <PropertyDetailsForm
-            data={formData.property}
+            data={formData.property || {}}
             onChange={(data) => {
               setFormData({
                 ...formData,
@@ -1237,7 +1324,7 @@ const ImmoForm: React.FC = () => {
       case 7: // Loan Details
         return (
           <LoanDetailsForm
-            data={formData.loan}
+            data={formData.loan || {}}
             onChange={(data) => {
               setFormData({
                 ...formData,
@@ -1252,7 +1339,7 @@ const ImmoForm: React.FC = () => {
       case 8: // Consent
         return (
           <ConsentForm
-            data={formData.consent}
+            data={formData.consent || {}}
             onChange={(data) => {
               setFormData({
                 ...formData,
@@ -1267,7 +1354,7 @@ const ImmoForm: React.FC = () => {
       case 9: // Documents
         return (
           <DocumentsForm
-            data={formData.documents}
+            data={formData.documents || []}
             onChange={(data) => {
               setFormData({
                 ...formData,
