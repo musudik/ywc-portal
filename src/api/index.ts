@@ -1,3 +1,6 @@
+// Export base API instance
+export { default as api } from './api';
+
 // Export auth API
 export * from './auth';
 export { default as authApi } from './auth';

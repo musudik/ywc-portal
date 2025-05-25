@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Plus, Trash2, Save, Eye, Copy } from "lucide-react";
 import DashboardLayout from "../../../components/dashboard/layout";
 import { createSafeTranslate } from "../../../utils/translationUtils";
+import { formConfigApi } from "../../../api/formConfig";
 
 // Import the components
 import SectionConfiguration from "./components/SectionConfiguration";
@@ -65,6 +66,11 @@ const FormConfigTool = () => {
   const [success, setSuccess] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [savedConfigs, setSavedConfigs] = useState([]);
+  const [showConfigList, setShowConfigList] = useState(true);
+  const [selectedConfigId, setSelectedConfigId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
   // Load existing configurations on mount
   useEffect(() => {
@@ -73,14 +79,11 @@ const FormConfigTool = () => {
 
   const loadSavedConfigurations = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const configs = await formConfigApi.getAllConfigurations();
-      // setSavedConfigs(configs);
-      
-      // Placeholder for now
-      setSavedConfigs([]);
+      const response = await formConfigApi.getAllConfigurations();
+      setSavedConfigs(response.data || []);
     } catch (err) {
       console.error("Failed to load saved configurations:", err);
+      setError("Failed to load saved configurations");
     }
   };
 
@@ -160,20 +163,21 @@ const FormConfigTool = () => {
 
       const configToSave = {
         ...formConfig,
-        createdAt: formConfig.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        // Remove UI-only fields that shouldn't be sent to the backend
+        createdAt: undefined,
+        updatedAt: undefined
       };
 
-      // TODO: Replace with actual API call
-      // await formConfigApi.saveConfiguration(configToSave);
+      const savedConfig = await formConfigApi.saveConfiguration(configToSave);
       
-      console.log("Saving form configuration:", configToSave);
+      // Update the form config with the saved data (including ID for updates)
+      setFormConfig(savedConfig);
       
       setSuccess("Form configuration saved successfully!");
       loadSavedConfigurations();
     } catch (err) {
       console.error("Failed to save form configuration:", err);
-      setError("Failed to save form configuration. Please try again.");
+      setError(err.message || "Failed to save form configuration. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -197,7 +201,89 @@ const FormConfigTool = () => {
       createdAt: null,
       updatedAt: null
     });
+    setSelectedConfigId(null);
+    setShowConfigList(false);
     setSuccess("Started new configuration");
+  };
+
+  const handleSelectConfig = async (config) => {
+    try {
+      setLoading(true);
+      const fullConfig = await formConfigApi.getConfigurationById(config.id);
+      setFormConfig(fullConfig);
+      setSelectedConfigId(config.id);
+      setShowConfigList(false);
+      setSuccess(`Loaded configuration: ${config.name}`);
+    } catch (err) {
+      console.error("Failed to load configuration:", err);
+      setError("Failed to load configuration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopyConfig = async (config) => {
+    try {
+      setLoading(true);
+      const duplicatedConfig = await formConfigApi.duplicateConfiguration(config.id, {
+        name: `${config.name} (Copy)`,
+        version: "1.0"
+      });
+      setSuccess(`Configuration copied: ${duplicatedConfig.name}`);
+      loadSavedConfigurations();
+    } catch (err) {
+      console.error("Failed to copy configuration:", err);
+      setError("Failed to copy configuration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteConfig = async (config) => {
+    if (!window.confirm(`Are you sure you want to delete "${config.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await formConfigApi.deleteConfiguration(config.id);
+      setSuccess(`Configuration deleted: ${config.name}`);
+      loadSavedConfigurations();
+      
+      // If the deleted config was currently selected, clear the form
+      if (selectedConfigId === config.id) {
+        handleNewConfig();
+      }
+    } catch (err) {
+      console.error("Failed to delete configuration:", err);
+      setError("Failed to delete configuration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (config) => {
+    try {
+      setLoading(true);
+      const updatedConfig = await formConfigApi.toggleConfigurationStatus(config.id);
+      setSuccess(`Configuration ${updatedConfig.isActive ? 'activated' : 'deactivated'}: ${config.name}`);
+      loadSavedConfigurations();
+      
+      // If the toggled config is currently selected, update the form
+      if (selectedConfigId === config.id) {
+        setFormConfig(prev => ({ ...prev, isActive: updatedConfig.isActive }));
+      }
+    } catch (err) {
+      console.error("Failed to toggle configuration status:", err);
+      setError("Failed to toggle configuration status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowConfigList(true);
+    setSelectedConfigId(null);
   };
 
   const handleExportConfig = () => {
@@ -211,6 +297,21 @@ const FormConfigTool = () => {
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
   };
+
+  // Filter configurations based on search and filters
+  const filteredConfigs = savedConfigs.filter(config => {
+    const matchesSearch = !searchTerm || 
+      config.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      config.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = !filterType || config.formType === filterType;
+    
+    const matchesStatus = !filterStatus || 
+      (filterStatus === "active" && config.isActive) ||
+      (filterStatus === "inactive" && !config.isActive);
+    
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   return (
     <DashboardLayout>
@@ -226,22 +327,31 @@ const FormConfigTool = () => {
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
+            {!showConfigList && (
+              <Button variant="outline" onClick={handleBackToList} size="sm">
+                ← Back to List
+              </Button>
+            )}
             <Button variant="outline" onClick={handleNewConfig} size="sm">
               <Plus className="w-4 h-4 mr-2" />
               New
             </Button>
-            <Button variant="outline" onClick={handleExportConfig} disabled={!formConfig.name} size="sm">
-              <Copy className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="outline" onClick={() => setShowPreview(true)} size="sm">
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
-            <Button onClick={handleSave} disabled={loading} size="sm">
-              <Save className="w-4 h-4 mr-2" />
-              {loading ? 'Saving...' : 'Save'}
-            </Button>
+            {!showConfigList && (
+              <>
+                <Button variant="outline" onClick={handleExportConfig} disabled={!formConfig.name} size="sm">
+                  <Copy className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <Button variant="outline" onClick={() => setShowPreview(true)} size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+                <Button onClick={handleSave} disabled={loading} size="sm">
+                  <Save className="w-4 h-4 mr-2" />
+                  {loading ? 'Saving...' : 'Save'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -268,6 +378,140 @@ const FormConfigTool = () => {
           </div>
         )}
 
+        {/* Configuration List View */}
+        {showConfigList && (
+          <Card className="shadow-sm">
+            <CardHeader className="bg-background border-b">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle className="text-lg font-semibold">
+                  Existing Form Configurations ({filteredConfigs.length})
+                </CardTitle>
+                <div className="flex flex-wrap gap-2">
+                  <Input
+                    placeholder="Search configurations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-48"
+                  />
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">All Types</option>
+                    {FORM_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {filteredConfigs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="text-4xl mb-4">📋</div>
+                  <p className="text-lg font-medium mb-2">No configurations found</p>
+                  <p className="text-sm">
+                    {savedConfigs.length === 0 
+                      ? "Create your first form configuration to get started"
+                      : "Try adjusting your search or filter criteria"
+                    }
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {filteredConfigs.map((config) => (
+                    <div key={config.id} className="p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleSelectConfig(config)}>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-foreground truncate">{config.name}</h3>
+                              <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                <span className="capitalize">{config.formType}</span>
+                                <span>v{config.version}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  config.isActive 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                }`}>
+                                  {config.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                                <span>Updated {new Date(config.updatedAt).toLocaleDateString()}</span>
+                              </div>
+                              {config.description && (
+                                <p className="text-sm text-muted-foreground mt-1 truncate">{config.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectConfig(config);
+                            }}
+                            className="text-xs"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyConfig(config);
+                            }}
+                            className="text-xs"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleStatus(config);
+                            }}
+                            className={`text-xs ${config.isActive ? 'text-orange-600' : 'text-green-600'}`}
+                          >
+                            {config.isActive ? 'Deactivate' : 'Activate'}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteConfig(config);
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Form Configuration Editor */}
+        {!showConfigList && (
+          <>
         {/* Basic Information */}
         <Card className="shadow-sm">
           <CardHeader className="bg-background border-b">
@@ -369,6 +613,8 @@ const FormConfigTool = () => {
           documents={formConfig.documents}
           onUpdate={handleDocumentsUpdate}
         />
+        </>
+        )}
 
         {/* Form Preview Modal */}
         {showPreview && (

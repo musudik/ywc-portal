@@ -3,52 +3,52 @@ import api from './api';
 // Form Configuration API endpoints
 const FORM_CONFIG_ENDPOINTS = {
   // Get all form configurations
-  getAll: '/admin/form-configurations',
+  getAll: '/api/admin/form-configurations',
   
   // Get specific form configuration by ID
-  getById: (id) => `/admin/form-configurations/${id}`,
+  getById: (id) => `/api/admin/form-configurations/${id}`,
   
   // Get configurations by form type
-  getByType: (formType) => `/admin/form-configurations?type=${formType}`,
+  getByType: (formType) => `/api/admin/form-configurations?type=${formType}`,
   
   // Get active configurations only
-  getActive: '/admin/form-configurations?active=true',
+  getActive: '/api/admin/form-configurations?active=true',
   
   // Create new form configuration
-  create: '/admin/form-configurations',
+  create: '/api/admin/form-configurations',
   
   // Update existing form configuration
-  update: (id) => `/admin/form-configurations/${id}`,
+  update: (id) => `/api/admin/form-configurations/${id}`,
   
   // Delete form configuration
-  delete: (id) => `/admin/form-configurations/${id}`,
+  delete: (id) => `/api/admin/form-configurations/${id}`,
   
   // Duplicate form configuration
-  duplicate: (id) => `/admin/form-configurations/${id}/duplicate`,
+  duplicate: (id) => `/api/admin/form-configurations/${id}/duplicate`,
   
   // Get configuration versions/history
-  getVersions: (id) => `/admin/form-configurations/${id}/versions`,
+  getVersions: (id) => `/api/admin/form-configurations/${id}/versions`,
   
   // Activate/Deactivate configuration
-  toggleStatus: (id) => `/admin/form-configurations/${id}/toggle-status`,
+  toggleStatus: (id) => `/api/admin/form-configurations/${id}/toggle-status`,
   
   // Validate configuration
-  validate: '/admin/form-configurations/validate',
+  validate: '/api/admin/form-configurations/validate',
   
   // Export configuration
-  export: (id) => `/admin/form-configurations/${id}/export`,
+  export: (id) => `/api/admin/form-configurations/${id}/export`,
   
   // Import configuration
-  import: '/admin/form-configurations/import',
+  import: '/api/admin/form-configurations/import',
   
   // Get configuration usage statistics
-  getStats: (id) => `/admin/form-configurations/${id}/stats`,
+  getStats: (id) => `/api/admin/form-configurations/${id}/stats`,
   
   // Get all form types
-  getFormTypes: '/admin/form-configurations/types',
+  getFormTypes: '/api/admin/form-configurations/types',
   
   // Get section field definitions
-  getSectionFields: '/admin/form-configurations/section-fields',
+  getSectionFields: '/api/admin/form-configurations/section-fields',
 };
 
 /**
