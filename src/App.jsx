@@ -3,10 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet }
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ClientDashboard from "./pages/client/Dashboard";
-import AdminDashboard from "./pages/admin/Dashboard";
+import AdminDashboard from "./pages/admin/index";
 import CoachDashboard from "./pages/coach/Dashboard";
 import ProfileSetup from "./pages/client/profile";
 import ClientForms from "./pages/client/forms";
+
+// Admin components
+import FormConfigTool from "./pages/admin/config-tool";
 
 // Settings pages
 import ClientSettings from "./pages/client/settings";
@@ -134,6 +137,15 @@ function App() {
               {/* Protected admin routes */}
               <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/config-tool" element={<FormConfigTool />} />
+                <Route path="/admin/users" element={<div className="p-6">User Management - Coming Soon</div>} />
+                <Route path="/admin/settings" element={<div className="p-6">System Settings - Coming Soon</div>} />
+                <Route path="/admin/reports" element={<div className="p-6">Reports & Analytics - Coming Soon</div>} />
+                <Route path="/admin/security" element={<div className="p-6">Security & Access - Coming Soon</div>} />
+                <Route path="/admin/database" element={<div className="p-6">Database Management - Coming Soon</div>} />
+                <Route path="/admin/maintenance" element={<div className="p-6">System Maintenance - Coming Soon</div>} />
+                <Route path="/admin/templates" element={<div className="p-6">Document Templates - Coming Soon</div>} />
                 {/* Add more admin routes here */}
               </Route>
               
