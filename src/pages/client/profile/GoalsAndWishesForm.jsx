@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button";
 import { profileApi } from "../../../api";
 
-const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => {
+const GoalsAndWishesForm = ({ onComplete, onNext, onBack, personalId, initialData, skipApiSave = false, skipApiFetch = false }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,7 +35,7 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => 
   // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchGoalsAndWishes = async () => {
-      if (personalId && !initialData) {
+      if (personalId && !initialData && !skipApiFetch) {
         try {
           const details = await profileApi.getGoalsAndWishes(personalId);
           if (details) {
@@ -60,7 +60,7 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => 
     };
 
     fetchGoalsAndWishes();
-  }, [personalId, initialData]);
+  }, [personalId, initialData, skipApiFetch]);
   
   // Update personalId in formData if it changes
   useEffect(() => {
@@ -93,6 +93,17 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => 
         ...formData,
         personalId
       };
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for goals and wishes (used in multi-step form)");
+        const callback = onComplete || onNext;
+        if (callback) {
+          callback(dataToSubmit);
+        }
+        setLoading(false);
+        return;
+      }
 
       let response;
       
@@ -139,8 +150,11 @@ const GoalsAndWishesForm = ({ onComplete, onBack, personalId, initialData }) => 
         }
       }
 
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Call the onComplete or onNext callback with the response
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(response);
+      }
     } catch (err) {
       console.error("Failed to save goals and wishes:", err);
       setError(err.response?.data?.message || "Failed to save goals and wishes. Please try again.");

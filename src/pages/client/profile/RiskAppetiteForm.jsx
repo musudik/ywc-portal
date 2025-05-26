@@ -11,10 +11,12 @@ const KNOWLEDGE_EXPERIENCE_OPTIONS = ["none", "basic", "intermediate", "advanced
 
 const RiskAppetiteForm = ({ 
   onComplete, 
+  onNext,
   onBack, 
   personalId, 
   initialData,
-  skipApiSave = false 
+  skipApiSave = false,
+  skipApiFetch = false
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -47,7 +49,7 @@ const RiskAppetiteForm = ({
   // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchRiskAppetite = async () => {
-      if (personalId && !initialData) {
+      if (personalId && !initialData && !skipApiFetch) {
         try {
           const details = await profileApi.getRiskAppetite(personalId);
           if (details) {
@@ -72,7 +74,7 @@ const RiskAppetiteForm = ({
     };
 
     fetchRiskAppetite();
-  }, [personalId, initialData]);
+  }, [personalId, initialData, skipApiFetch]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -106,6 +108,17 @@ const RiskAppetiteForm = ({
         ...formData,
         personalId
       };
+
+      // If skipApiSave is true, skip the API calls and just return the data
+      if (skipApiSave) {
+        console.log("Skipping API save for risk appetite (used in multi-step form)");
+        const callback = onComplete || onNext;
+        if (callback) {
+          callback(dataToSubmit);
+        }
+        setLoading(false);
+        return;
+      }
 
       let response;
       
@@ -152,8 +165,11 @@ const RiskAppetiteForm = ({
         }
       }
 
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Call the onComplete or onNext callback with the response
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(response);
+      }
     } catch (err) {
       console.error("Failed to save risk appetite:", err);
       setError(err.response?.data?.message || "Failed to save risk appetite. Please try again.");

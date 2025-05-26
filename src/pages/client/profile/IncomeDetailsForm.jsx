@@ -6,10 +6,12 @@ import { profileApi } from "../../../api";
 
 const IncomeDetailsForm = ({ 
   onComplete, 
+  onNext,
   onBack, 
   personalId, 
   initialData,
-  skipApiSave = false 
+  skipApiSave = false,
+  skipApiFetch = false
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,7 @@ const IncomeDetailsForm = ({
   // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchIncomeDetails = async () => {
-      if (personalId && !initialData) {
+      if (personalId && !initialData && !skipApiFetch) {
         try {
           const details = await profileApi.getIncomeDetails(personalId);
           if (details) {
@@ -71,7 +73,7 @@ const IncomeDetailsForm = ({
     };
 
     fetchIncomeDetails();
-  }, [personalId, initialData]);
+  }, [personalId, initialData, skipApiFetch]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -102,7 +104,10 @@ const IncomeDetailsForm = ({
       // If skipApiSave is true, skip the API calls and just return the data
       if (skipApiSave) {
         console.log("Skipping API save for income details (used in multi-step form)");
-        onComplete(dataToSubmit);
+        const callback = onComplete || onNext;
+        if (callback) {
+          callback(dataToSubmit);
+        }
         setLoading(false);
         return;
       }
@@ -154,8 +159,11 @@ const IncomeDetailsForm = ({
 
       console.log("Income details saved successfully:", response);
       
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Call the onComplete or onNext callback with the response
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(response);
+      }
     } catch (err) {
       console.error("Failed to save income details:", err);
       setError(err.response?.data?.message || "Failed to save income details. Please try again.");

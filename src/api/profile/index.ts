@@ -185,6 +185,30 @@ export const profileApi = {
     }
   },
 
+  // Get all clients for a coach
+  getAllClients: async (): Promise<PersonalDetailsInput[]> => {
+    try {
+      console.log("Fetching all clients for coach");
+      const response = await businessApi.get('/personal-details');
+      
+      // Log the raw response for debugging
+      console.log("All clients API raw response:", response);
+      
+      // The response should be an array of personal details
+      const data = response.data;
+      if (Array.isArray(data)) {
+        console.log(`Found ${data.length} clients`);
+        return data;
+      } else {
+        console.log("Unexpected response format, expected array");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching all clients:", error);
+      throw error;
+    }
+  },
+
   savePersonalDetails: async (data: PersonalDetailsInput): Promise<PersonalDetailsInput> => {
     console.log("Creating new personal details:", data);
     const response = await businessApi.post('/personal-details', data);

@@ -13,9 +13,11 @@ const APPLICANT_TYPE_OPTIONS = ["PrimaryApplicant", "SecondaryApplicant"];
 
 const PersonalDetailsForm = ({ 
   onComplete, 
+  onNext,
   initialData, 
   id, 
-  skipApiSave = false
+  skipApiSave = false,
+  createNewClient = false
 }) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
@@ -185,17 +187,29 @@ const PersonalDetailsForm = ({
     try {
       // Prepare data for submission
       const dataToSubmit = {
-        ...formData,
-        // Ensure userId is included
-        userId: formData.id || id
+        ...formData
       };
+      
+      // For new clients, remove any id fields and let the backend generate new ones
+      if (createNewClient) {
+        // Remove any existing IDs for new client creation
+        delete dataToSubmit.id;
+        delete dataToSubmit.userId;
+        delete dataToSubmit.personalId;
+      } else {
+        // Only include userId if we're not creating a new client
+        dataToSubmit.userId = formData.id || id;
+      }
 
       console.log("Submitting personal details:", dataToSubmit);
 
       // If skipApiSave is true, skip the API calls and just return the data
       if (skipApiSave) {
         console.log("Skipping API save for personal details (used in multi-step form)");
-        onComplete(dataToSubmit);
+        const callback = onComplete || onNext;
+        if (callback) {
+          callback(dataToSubmit);
+        }
         setLoading(false);
         return;
       }
@@ -206,7 +220,9 @@ const PersonalDetailsForm = ({
       const existingId = formData.id || formData.personalId || initialData?.id || initialData?.personalId;
       
       console.log("Existing ID:", existingId);
-      if (existingId) {
+      console.log("Create new client flag:", createNewClient);
+      
+      if (existingId && !createNewClient) {
         console.log(`Updating existing personal details with ID: ${existingId}`);
         // Update existing personal details
         response = await profileApi.updatePersonalDetails({
@@ -214,48 +230,82 @@ const PersonalDetailsForm = ({
           id: existingId
         });
       } else {
-        // Check if user exists by userId (which should be available from props)
-        try {
-          console.log("Checking if user exists with userId:", dataToSubmit.userId);
-          const existingUsers = await profileApi.getPersonalDetails();
-          
-          let existingUser = null;
-          if (Array.isArray(existingUsers)) {
-            existingUser = existingUsers.find(user => 
-              user.userId === dataToSubmit.userId || user.email === dataToSubmit.email
-            );
-          } else if (existingUsers && 
-                    (existingUsers.userId === dataToSubmit.userId || 
-                     existingUsers.email === dataToSubmit.email)) {
-            existingUser = existingUsers;
-          }
-          
-          if (existingUser && (existingUser.id || existingUser.personalId)) {
-            console.log(`User already exists with ID: ${existingUser.id || existingUser.personalId}`);
-            // Update existing user
-            response = await profileApi.updatePersonalDetails({
-              ...dataToSubmit,
-              id: existingUser.id || existingUser.personalId
-            });
-          } else {
-            console.log("Creating new personal details - no existing user found");
-            // Create new personal details
+        // Check if user exists by userId or email (for non-new clients)
+        if (!createNewClient) {
+          try {
+            console.log("Checking if user exists with userId:", dataToSubmit.userId);
+            const existingUsers = await profileApi.getPersonalDetails();
+            
+            let existingUser = null;
+            if (Array.isArray(existingUsers)) {
+              existingUser = existingUsers.find(user => 
+                user.userId === dataToSubmit.userId || user.email === dataToSubmit.email
+              );
+            } else if (existingUsers && 
+                      (existingUsers.userId === dataToSubmit.userId || 
+                       existingUsers.email === dataToSubmit.email)) {
+              existingUser = existingUsers;
+            }
+            
+            if (existingUser && (existingUser.id || existingUser.personalId)) {
+              console.log(`User already exists with ID: ${existingUser.id || existingUser.personalId}`);
+              // Update existing user
+              response = await profileApi.updatePersonalDetails({
+                ...dataToSubmit,
+                id: existingUser.id || existingUser.personalId
+              });
+            } else {
+              console.log("Creating new personal details - no existing user found");
+              // Create new personal details
+              response = await profileApi.savePersonalDetails(dataToSubmit);
+            }
+          } catch (checkErr) {
+            console.error("Error checking for existing user:", checkErr);
+            // If check fails, proceed with create
+            console.log("Creating new personal details after failed check");
             response = await profileApi.savePersonalDetails(dataToSubmit);
           }
-        } catch (checkErr) {
-          console.error("Error checking for existing user:", checkErr);
-          // If check fails, proceed with create
-          console.log("Creating new personal details after failed check");
+        } else {
+          console.log("Creating new client - bypassing existence check");
+          // For new clients, always create
           response = await profileApi.savePersonalDetails(dataToSubmit);
         }
       }
 
       console.log("Personal details saved successfully:", response);
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Call the onComplete or onNext callback with the response
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(response);
+      }
     } catch (err) {
       console.error("Failed to save personal details:", err);
-      setError(err.response?.data?.message || safeTranslate('profile.personalDetails.saveFailed', "Failed to save personal details. Please try again."));
+      console.error("Error response:", err.response);
+      console.error("Error data:", err.response?.data);
+      
+      // Extract detailed error information
+      let errorMessage = safeTranslate('profile.personalDetails.saveFailed', "Failed to save personal details. Please try again.");
+      
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        
+        // Handle specific error types
+        if (errorData.error === 'DUPLICATE_USER') {
+          errorMessage = `${errorData.message}: ${errorData.details}`;
+        } else if (errorData.message && errorData.error) {
+          errorMessage = `${errorData.message} (${errorData.error})`;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        
+        // Add validation errors if present
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          const validationErrors = errorData.errors.map(e => `${e.path?.join('.')}: ${e.message}`).join(', ');
+          errorMessage += ` Validation errors: ${validationErrors}`;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

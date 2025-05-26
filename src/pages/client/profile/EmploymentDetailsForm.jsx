@@ -53,12 +53,14 @@ const mapFormToBackendValues = (formData) => {
 
 const EmploymentDetailsForm = ({ 
   onComplete, 
+  onNext,
   onBack, 
   personalId, 
   initialData,
   showPreviousButton,
   onPrevious,
-  skipApiSave = false
+  skipApiSave = false,
+  skipApiFetch = false
 }) => {
   const { t } = useTranslation();
   const safeTranslate = createSafeTranslate(t);
@@ -133,11 +135,11 @@ const EmploymentDetailsForm = ({
       }
     };
 
-    // Only fetch if we have a valid personalId and no initialData
-    if (personalId && personalId !== 'undefined' && !initialData) {
+    // Only fetch if we have a valid personalId, no initialData, and skipApiFetch is false
+    if (personalId && personalId !== 'undefined' && !initialData && !skipApiFetch) {
       fetchEmploymentDetails();
     } else if (personalId && personalId !== 'undefined') {
-      // If we have initialData, just update the personalId
+      // If we have initialData or skipApiFetch is true, just update the personalId
       setFormData(prevData => ({
         ...prevData,
         personalId
@@ -146,7 +148,7 @@ const EmploymentDetailsForm = ({
     } else {
       setInitialLoading(false);
     }
-  }, [personalId, initialData]);
+  }, [personalId, initialData, skipApiFetch]);
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -274,7 +276,10 @@ const EmploymentDetailsForm = ({
       // If skipApiSave is true, skip the API calls and just return the data
       if (skipApiSave) {
         console.log("Skipping API save for employment details (used in multi-step form)");
-        onComplete(dataToSubmit);
+        const callback = onComplete || onNext;
+        if (callback) {
+          callback(dataToSubmit);
+        }
         setLoading(false);
         return;
       }
@@ -326,8 +331,11 @@ const EmploymentDetailsForm = ({
 
       console.log("Employment details saved successfully:", response);
       
-      // Call the onComplete callback with the response
-      onComplete(response);
+      // Call the onComplete or onNext callback with the response
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(response);
+      }
     } catch (err) {
       console.error("Failed to save employment details:", err);
       // Show more detailed error information with i18n

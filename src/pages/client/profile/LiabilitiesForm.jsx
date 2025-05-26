@@ -33,12 +33,14 @@ const safeStringify = (value) => {
 
 const LiabilitiesForm = ({ 
   onComplete, 
+  onNext,
   onBack,
   personalId,
   initialData,
   showPreviousButton,
   onPrevious,
-  skipApiSave = false 
+  skipApiSave = false,
+  skipApiFetch = false
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -107,11 +109,16 @@ const LiabilitiesForm = ({
   useEffect(() => {
     if (initialData) {
       console.log("Setting liabilities data from initialData:", initialData);
-      // Process initialData to ensure loanType is a string
+      // Process initialData to ensure loanType is a string and clean structure
       if (Array.isArray(initialData) && initialData.length > 0) {
         const processedData = initialData.map(liability => ({
-          ...liability,
-          loanType: getLoanTypeString(liability.loanType)
+          personalId: liability.personalId || personalId,
+          loanType: getLoanTypeString(liability.loanType),
+          loanBank: liability.loanBank || "",
+          loanAmount: liability.loanAmount || 0,
+          loanMonthlyRate: liability.loanMonthlyRate || 0,
+          loanInterest: liability.loanInterest || 0,
+          liabilityId: liability.liabilityId || liability.id // Keep existing ID if available
         }));
         console.log("processedData:", processedData);
         setLiabilities(processedData);
@@ -119,8 +126,13 @@ const LiabilitiesForm = ({
         console.log("initialData:", initialData);
         // If initialData is a single object, create an array with that object
         const singleLiability = {
-          ...initialData,
-          loanType: getLoanTypeString(initialData.loanType)
+          personalId: initialData.personalId || personalId,
+          loanType: getLoanTypeString(initialData.loanType),
+          loanBank: initialData.loanBank || "",
+          loanAmount: initialData.loanAmount || 0,
+          loanMonthlyRate: initialData.loanMonthlyRate || 0,
+          loanInterest: initialData.loanInterest || 0,
+          liabilityId: initialData.liabilityId || initialData.id
         };
         console.log("singleLiability:", singleLiability);
         setLiabilities([singleLiability]);
@@ -135,15 +147,20 @@ const LiabilitiesForm = ({
   // Load initial data if available and initialData prop is not provided
   useEffect(() => {
     const fetchLiabilities = async () => {
-      if (personalId && !initialData) {
+      if (personalId && !initialData && !skipApiFetch) {
         try {
           const data = await profileApi.getLiabilities(personalId);
           
           if (data && Array.isArray(data)) {
-            // Process the data to ensure loanType is a string
+            // Process the data to ensure loanType is a string and clean structure
             const processedData = data.map(liability => ({
-              ...liability,
-              loanType: getLoanTypeString(liability.loanType)
+              personalId: liability.personalId || personalId,
+              loanType: getLoanTypeString(liability.loanType),
+              loanBank: liability.loanBank || "",
+              loanAmount: liability.loanAmount || 0,
+              loanMonthlyRate: liability.loanMonthlyRate || 0,
+              loanInterest: liability.loanInterest || 0,
+              liabilityId: liability.liabilityId || liability.id
             }));
             console.log("processedData:", processedData);
             setLiabilities(processedData);
@@ -166,7 +183,7 @@ const LiabilitiesForm = ({
     };
 
     fetchLiabilities();
-  }, [personalId, initialData]);
+  }, [personalId, initialData, skipApiFetch]);
 
   // Handle input changes for current liability
   const handleChange = (e) => {
@@ -186,17 +203,30 @@ const LiabilitiesForm = ({
   // Handle edit liability
   const handleEdit = (liability) => {
     console.log("handleEdit liability:", liability);
+    // Only copy the required fields to avoid nested data structures
     setCurrentLiability({
-      ...liability,
-      loanType: getLoanTypeString(liability.loanType)
+      personalId: liability.personalId || personalId,
+      loanType: getLoanTypeString(liability.loanType),
+      loanBank: liability.loanBank || "",
+      loanAmount: liability.loanAmount || 0,
+      loanMonthlyRate: liability.loanMonthlyRate || 0,
+      loanInterest: liability.loanInterest || 0,
+      liabilityId: liability.liabilityId // Keep the ID for updates
     });
     setEditMode(true);
-    console.log("currentLiability:", currentLiability);
+    console.log("currentLiability set to clean object");
   };
 
   // Handle delete liability
   const handleDelete = async (liabilityId) => {
     try {
+      // If skipApiSave is true, just remove from local state without API calls
+      if (skipApiSave) {
+        console.log("Skipping API delete for liability (used in multi-step form)");
+        setLiabilities(liabilities.filter(item => item.liabilityId !== liabilityId));
+        return;
+      }
+
       await profileApi.deleteLiability(liabilityId);
       setLiabilities(liabilities.filter(item => item.liabilityId !== liabilityId));
     } catch (err) {
@@ -225,22 +255,60 @@ const LiabilitiesForm = ({
     setError(null);
 
     try {
-      // Make sure loanType is a string before sending
+      // Make sure loanType is a string and create clean object before sending
       const dataToSubmit = {
-        ...currentLiability,
-        loanType: getLoanTypeString(currentLiability.loanType)
+        personalId: currentLiability.personalId || personalId,
+        loanType: getLoanTypeString(currentLiability.loanType),
+        loanBank: currentLiability.loanBank || "",
+        loanAmount: currentLiability.loanAmount || 0,
+        loanMonthlyRate: currentLiability.loanMonthlyRate || 0,
+        loanInterest: currentLiability.loanInterest || 0
       };
-      console.log("dataToSubmit:", dataToSubmit);
+      console.log("dataToSubmit (clean):", dataToSubmit);
+
+      // If skipApiSave is true, just add to local state without API calls
+      if (skipApiSave) {
+        console.log("Skipping API save for liability (used in multi-step form)");
+        let updatedLiabilities;
+        
+        if (editMode && currentLiability.liabilityId) {
+          // Update existing liability in local state
+          updatedLiabilities = liabilities.map(item => 
+            item.liabilityId === currentLiability.liabilityId ? {
+              ...dataToSubmit,
+              liabilityId: currentLiability.liabilityId
+            } : item
+          );
+        } else {
+          // Add new liability to local state with temporary ID
+          const newLiability = {
+            ...dataToSubmit,
+            liabilityId: `temp-${Date.now()}` // Temporary ID for local state
+          };
+          updatedLiabilities = [...liabilities, newLiability];
+        }
+        
+        setLiabilities(updatedLiabilities);
+        resetForm();
+        setLoading(false);
+        return;
+      }
+
       let response;
       if (editMode && currentLiability.liabilityId) {
         // Update existing liability
         response = await profileApi.updateLiability(dataToSubmit);
         
-        // Update the liability in the list
+        // Update the liability in the list with clean object
         setLiabilities(liabilities.map(item => 
           item.liabilityId === response.liabilityId ? {
-            ...response,
-            loanType: getLoanTypeString(response.loanType)
+            personalId: response.personalId || personalId,
+            loanType: getLoanTypeString(response.loanType),
+            loanBank: response.loanBank || "",
+            loanAmount: response.loanAmount || 0,
+            loanMonthlyRate: response.loanMonthlyRate || 0,
+            loanInterest: response.loanInterest || 0,
+            liabilityId: response.liabilityId || response.id
           } : item
         ));
         console.log("liabilities:", liabilities);
@@ -251,10 +319,15 @@ const LiabilitiesForm = ({
           personalId
         });
         
-        // Add the new liability to the list
+        // Add the new liability to the list with clean object
         setLiabilities([...liabilities, {
-          ...response,
-          loanType: getLoanTypeString(response.loanType)
+          personalId: response.personalId || personalId,
+          loanType: getLoanTypeString(response.loanType),
+          loanBank: response.loanBank || "",
+          loanAmount: response.loanAmount || 0,
+          loanMonthlyRate: response.loanMonthlyRate || 0,
+          loanInterest: response.loanInterest || 0,
+          liabilityId: response.liabilityId || response.id
         }]);
         console.log("liabilities:", liabilities);
       }
@@ -276,25 +349,26 @@ const LiabilitiesForm = ({
     setError(null);
 
     try {
-      // Prepare data for submission - just return the current liabilities state
-      const dataToSubmit = {
-        personalId,
-        liabilities: liabilities // Send the current liabilities array
-      };
-
-      console.log("Proceeding to next step with liabilities:", dataToSubmit);
+      console.log("Proceeding to next step with liabilities:", liabilities);
 
       // If skipApiSave is true, skip the API calls and just return the data
       if (skipApiSave) {
         console.log("Skipping API save for liabilities (used in multi-step form)");
-        onComplete(dataToSubmit);
+        const callback = onComplete || onNext;
+        if (callback) {
+          // Return just the liabilities array, not wrapped in an object
+          callback(liabilities);
+        }
         setLoading(false);
         return;
       }
 
       // Individual liabilities are already saved/updated through handleSaveLiability
       // So we just need to proceed to the next step with the current data
-      onComplete(dataToSubmit);
+      const callback = onComplete || onNext;
+      if (callback) {
+        callback(liabilities);
+      }
     } catch (err) {
       console.error("Failed to proceed:", err);
       setError("Failed to proceed. Please try again.");
