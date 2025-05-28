@@ -150,7 +150,9 @@ const DashboardLayout = ({ children }) => {
     }
   }
   
-  const userAvatar = `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=1DB954&color=fff`;
+  // Use user's profile image if available, otherwise generate avatar
+  const userAvatar = user?.profileImage || 
+    `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=1DB954&color=fff`;
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-background text-foreground">

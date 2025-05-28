@@ -15,6 +15,154 @@ import {
 } from "../utils/clientUtils";
 import { exportFormAsPDF, previewFormAsPDF, emailForm } from "../utils/pdfExport";
 
+// Enhanced form configuration for complete profile data export
+const enhanceFormForPDF = (formData) => {
+  // Create a comprehensive form structure that includes all profile sections
+  const enhancedForm = {
+    ...formData,
+    title: formData.title || formData.name || "Financial Self-Disclosure Form",
+    sections: [
+      // Personal Information
+      {
+        title: "Personal Information",
+        sectionType: "personal",
+        showFields: [
+          "firstName",
+          "lastName",
+          "email",
+          "phone",
+          "streetAddress",
+          "city",
+          "postalCode",
+          "birthDate",
+          "maritalStatus",
+          "nationality",
+          "housing"
+        ]
+      },
+      // Employment Details
+      {
+        title: "Employment Information",
+        sectionType: "employment",
+        showFields: [
+          "employmentDetails[0].employmentType",
+          "employmentDetails[0].occupation",
+          "employmentDetails[0].employerName",
+          "employmentDetails[0].contractType",
+          "employmentDetails[0].employedSince"
+        ]
+      },
+      // Income Information
+      {
+        title: "Income Information",
+        sectionType: "income",
+        showFields: [
+          "incomeDetails[0].grossIncome",
+          "incomeDetails[0].netIncome",
+          "incomeDetails[0].taxClass",
+          "incomeDetails[0].numberOfSalaries",
+          "incomeDetails[0].childBenefit"
+        ]
+      },
+      // Expenses Information
+      {
+        title: "Monthly Expenses",
+        sectionType: "expenses",
+        showFields: [
+          "expensesDetails[0].coldRent",
+          "expensesDetails[0].electricity",
+          "expensesDetails[0].livingExpenses",
+          "expensesDetails[0].gas",
+          "expensesDetails[0].telecommunication"
+        ]
+      },
+      // Assets Information
+      {
+        title: "Assets Overview",
+        sectionType: "assets",
+        showFields: [
+          "assets[0].realEstate",
+          "assets[0].securities",
+          "assets[0].bankDeposits",
+          "assets[0].buildingSavings",
+          "assets[0].insuranceValues",
+          "assets[0].otherAssets"
+        ]
+      },
+      // Liabilities Information
+      {
+        title: "Liabilities",
+        sectionType: "liabilities",
+        showFields: [
+          "liabilities[0].loanType",
+          "liabilities[0].loanBank",
+          "liabilities[0].loanAmount",
+          "liabilities[0].loanMonthlyRate",
+          "liabilities[0].loanInterest"
+        ]
+      },
+      // Goals and Wishes
+      {
+        title: "Goals and Objectives",
+        sectionType: "goals",
+        showFields: [
+          "goalsAndWishes.retirementPlanning",
+          "goalsAndWishes.capitalFormation",
+          "goalsAndWishes.realEstateGoals",
+          "goalsAndWishes.financing",
+          "goalsAndWishes.protection"
+        ]
+      },
+      // Risk Appetite
+      {
+        title: "Risk Profile",
+        sectionType: "risk",
+        showFields: [
+          "riskAppetite.riskAppetite",
+          "riskAppetite.investmentHorizon",
+          "riskAppetite.knowledgeExperience",
+          "riskAppetite.healthInsurance"
+        ]
+      },
+      // Consent sections
+      {
+        title: "Data Processing Consent",
+        sectionType: "consent",
+        consentText: "I hereby consent to the processing of my personal data as provided in this form for the purpose of financial advisory services. I understand that my data will be handled in accordance with applicable data protection regulations (GDPR).\n\nThis includes the collection, storage, processing, and analysis of my personal and financial information for the purpose of providing personalized financial advice and recommendations.",
+        checkboxLabel: "I agree to the data processing terms",
+        required: true
+      },
+      {
+        title: "Privacy Policy Agreement", 
+        sectionType: "consent",
+        consentText: "I acknowledge that I have read and understood the Privacy Policy of YourWealth.Coach. I understand how my personal information will be collected, used, stored, and protected.\n\nI understand my rights regarding my personal data, including the right to access, rectify, erase, restrict processing, and data portability as outlined in the Privacy Policy.",
+        checkboxLabel: "I acknowledge and agree to the Privacy Policy",
+        required: true
+      }
+    ]
+  };
+
+  // If the original form has sections, merge them with our enhanced sections
+  if (formData.sections && Array.isArray(formData.sections)) {
+    // Keep original sections but ensure we have our comprehensive set
+    const originalSectionTypes = formData.sections.map(s => s.sectionType || s.name || s.title).filter(Boolean);
+    
+    // Only add our sections if they don't already exist
+    enhancedForm.sections = [
+      ...formData.sections,
+      ...enhancedForm.sections.filter(enhancedSection => {
+        const enhancedType = enhancedSection.sectionType || enhancedSection.name || enhancedSection.title;
+        return !originalSectionTypes.some(origType => 
+          origType.toLowerCase().includes(enhancedType.toLowerCase()) ||
+          enhancedType.toLowerCase().includes(origType.toLowerCase())
+        );
+      })
+    ];
+  }
+
+  return enhancedForm;
+};
+
 const ClientForms = ({ 
   selectedClient,
   availableForms = [],
@@ -37,7 +185,11 @@ const ClientForms = ({
     if (!selectedForm || !selectedClient) return;
     
     try {
-      await previewFormAsPDF(selectedForm, selectedClient, signature);
+      // Enhance the form configuration for complete data export
+      const enhancedFormData = enhanceFormForPDF(selectedForm);
+      console.log('Enhanced form data for PDF preview:', enhancedFormData);
+      
+      await previewFormAsPDF(enhancedFormData, selectedClient, signature);
     } catch (error) {
       console.error('Error previewing PDF:', error);
       alert('Error previewing PDF. Please try again.');
@@ -49,7 +201,11 @@ const ClientForms = ({
     
     setIsExporting(true);
     try {
-      await exportFormAsPDF(selectedForm, selectedClient, signature, formRef);
+      // Enhance the form configuration for complete data export
+      const enhancedFormData = enhanceFormForPDF(selectedForm);
+      console.log('Enhanced form data for PDF export:', enhancedFormData);
+      
+      await exportFormAsPDF(enhancedFormData, selectedClient, signature, formRef);
     } catch (error) {
       console.error('Error exporting PDF:', error);
       alert('Error exporting PDF. Please try again.');
@@ -62,7 +218,9 @@ const ClientForms = ({
     if (!selectedForm || !selectedClient) return;
     
     try {
-      await emailForm(selectedForm, selectedClient);
+      // Enhance the form configuration for complete data export
+      const enhancedFormData = enhanceFormForPDF(selectedForm);
+      await emailForm(enhancedFormData, selectedClient);
     } catch (error) {
       console.error('Error emailing form:', error);
       alert('Error creating email. Please try again.');

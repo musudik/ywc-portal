@@ -70,6 +70,14 @@ const SecurityIcon = () => (
   </svg>
 );
 
+const AvatarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="10" r="3" />
+    <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+  </svg>
+);
+
 const ClientSettings = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -77,22 +85,22 @@ const ClientSettings = () => {
   
   // Navigation items with routes
   const navigationItems = [
+    { id: "account", label: "Account", icon: <AccountIcon />, path: "/client/settings/account" },
     { id: "appearance", label: "Appearance", icon: <ThemeIcon />, path: "/client/settings/appearance" },
     { id: "notifications", label: "Notifications", icon: <NotificationIcon />, path: "/client/settings/notifications" },
     { id: "privacy", label: "Privacy", icon: <PrivacyIcon />, path: "/client/settings/privacy" },
     { id: "language", label: "Language", icon: <LanguageIcon />, path: "/client/settings/language" },
     { id: "accessibility", label: "Accessibility", icon: <AccessibilityIcon />, path: "/client/settings/accessibility" },
-    { id: "account", label: "Account", icon: <AccountIcon />, path: "/client/settings/account" },
     { id: "security", label: "Security", icon: <SecurityIcon />, path: "/client/settings/security" },
   ];
 
   // Determine active section based on URL
   const currentPath = location.pathname;
 
-  // Redirect to appearance settings if at the base settings URL
+  // Redirect to account settings if at the base settings URL
   useEffect(() => {
     if (currentPath === "/client/settings") {
-      navigate("/client/settings");
+      navigate("/client/settings/account");
     }
   }, [currentPath, navigate]);
 

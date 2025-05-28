@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Export Test</title>
+    <script src="https://unpkg.com/pdfmake@0.2.7/build/pdfmake.min.js"></script>
+    <script src="https://unpkg.com/pdfmake@0.2.7/build/vfs_fonts.js"></script>
+</head>
+<body>
+    <h1>PDF Export Test</h1>
+    <button onclick="testPDFExport()">Test PDF Export</button>
+    
+    <script>
+        // Test function to verify PDF export works
+        function testPDFExport() {
+            const testData = {
+                title: "Test Financial Form",
+                sections: [
+                    {
+                        title: "Personal Information",
+                        showFields: ["firstName", "lastName", "email"]
+                    },
+                    {
+                        title: "Income Information", 
+                        showFields: ["grossIncome", "netIncome"]
+                    }
+                ]
+            };
+            
+            const testClient = {
+                firstName: "John",
+                lastName: "Doe", 
+                email: "john.doe@example.com",
+                grossIncome: 75000,
+                netIncome: 48000
+            };
+            
+            // Simple PDF definition for testing
+            const docDefinition = {
+                content: [
+                    { text: 'PDF Export Test', style: 'header' },
+                    { text: `Client: ${testClient.firstName} ${testClient.lastName}` },
+                    { text: `Email: ${testClient.email}` },
+                    { text: `Gross Income: €${testClient.grossIncome.toLocaleString()}` },
+                    { text: `Net Income: €${testClient.netIncome.toLocaleString()}` }
+                ],
+                styles: {
+                    header: {
+                        fontSize: 18,
+                        bold: true,
+                        margin: [0, 0, 0, 10]
+                    }
+                }
+            };
+            
+            try {
+                pdfMake.createPdf(docDefinition).download('test_export.pdf');
+                console.log('PDF export test successful');
+            } catch (error) {
+                console.error('PDF export test failed:', error);
+                alert('PDF export failed: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

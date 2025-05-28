@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authApi } from "../api";
 import { profileApi } from "../api";
-import { getUser, isAuthenticated, saveAuthData, clearAuthData } from "../utils/tokenUtils";
+import { getUser, isAuthenticated, saveAuthData, clearAuthData, getToken } from "../utils/tokenUtils";
 
 // Create the auth context
 const AuthContext = createContext(null);
@@ -224,6 +224,35 @@ export const AuthProvider = ({ children }) => {
     console.log("Logout completed successfully");
   };
 
+  // Update user function
+  const updateUser = async (userData) => {
+    try {
+      // Enhance the updated user data with profile information
+      const enhancedUserData = await enhanceUserWithProfile(userData);
+      setUser(enhancedUserData);
+      
+      // Update the stored user data as well
+      const token = getToken();
+      if (token) {
+        saveAuthData(token, enhancedUserData, '24h'); // Use default expiry
+      }
+      
+      console.log("User data updated successfully:", enhancedUserData);
+      return enhancedUserData;
+    } catch (error) {
+      console.error("Error updating user data:", error);
+      // Even if enhancement fails, still update the core user data
+      setUser(userData);
+      
+      const token = getToken();
+      if (token) {
+        saveAuthData(token, userData, '24h');
+      }
+      
+      return userData;
+    }
+  };
+
   // Context value
   const value = {
     user,
@@ -233,6 +262,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     refreshToken,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
