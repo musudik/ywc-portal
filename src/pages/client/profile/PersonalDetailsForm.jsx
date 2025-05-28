@@ -216,8 +216,8 @@ const PersonalDetailsForm = ({
 
       let response;
       
-      // Check if we have an ID (either from formData.id, formData.personalId, or initialData)
-      const existingId = formData.id || formData.personalId || initialData?.id || initialData?.personalId;
+      // Check if we have an ID (only the userId is used)
+      const existingId = formData.userId || initialData?.userId;
       
       console.log("Existing ID:", existingId);
       console.log("Create new client flag:", createNewClient);

@@ -26,12 +26,9 @@ export const ProfileProvider = ({ children }) => {
         // Try to extract ID from different possible properties
         let extractedId = null;
         
-        if (personalDetails.personalId) {
-          extractedId = personalDetails.personalId;
-          console.log("Found personalId in personal details:", extractedId);
-        } else if (personalDetails.id) {
-          extractedId = personalDetails.id;
-          console.log("Found id in personal details:", extractedId);
+        if (personalDetails.userId) {
+          extractedId = personalDetails.userId;
+          console.log("Found userId in personal details:", extractedId);
         }
         
         if (extractedId) {

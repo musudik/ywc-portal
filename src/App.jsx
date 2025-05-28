@@ -30,6 +30,9 @@ import { ProfileProvider, useProfile } from "./contexts/ProfileContext";
 // Import Immobilien form
 import ImmoForm from "./pages/client/forms/immobilien";
 
+// Import PDFExport test component
+import PDFExportExample from "./components/ui/PDFExportExample";
+
 // Protected route component
 const ProtectedRoute = ({ allowedRoles }) => {
   const { user, isLoggedIn, loading } = useAuth();
@@ -130,6 +133,8 @@ function App() {
                   <Route path="/client/forms/gems/:id" element={<Navigate to="/client/forms" />} />
                   {/* Other client routes */}
                   <Route path="/client/forms" element={<ClientForms />} />
+                  {/* Test route for PDF Export */}
+                  <Route path="/client/test-pdf" element={<PDFExportExample />} />
                 </Route>
                 <Route path="/client/profile" element={<ProfileSetup />} />
               </Route>

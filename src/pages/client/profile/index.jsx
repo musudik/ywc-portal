@@ -340,14 +340,11 @@ const ProfileSetup = () => {
         if (response.personalId) {
           newPersonalId = response.personalId;
           console.log("Found personalId in response:", newPersonalId);
-        } else if (response.id) {
-          newPersonalId = response.id;
-          console.log("Found id in response:", newPersonalId);
         }
         
         if (newPersonalId) {
           console.log("Setting personalId from response:", newPersonalId);
-          // Force refresh personal ID in context
+          // Force refresh personalId in context
           await refreshPersonalId();
         }
       }
@@ -412,7 +409,6 @@ const ProfileSetup = () => {
     }
   };
 
-  // Render the current step form
   const renderStepForm = () => {
     if (loading) {
       return (
@@ -499,6 +495,7 @@ const ProfileSetup = () => {
         />;
     }
   };
+
 
   // Main render function
   return (

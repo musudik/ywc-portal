@@ -268,8 +268,30 @@ export const profileApi = {
 
   // Income Details
   getIncomeDetails: async (personalId: string): Promise<IncomeDetailsInput> => {
-    const response = await businessApi.get(`/client-data/income/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching income details for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/income/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Income details API raw response:", response);
+      
+      // Handle the response as an array and return the first item
+      const data = response.data;
+      if (Array.isArray(data)) {
+        if (data.length > 0) {
+          console.log("Income details received as array, returning first item:", data[0]);
+          return data[0];
+        } else {
+          console.log("Income details array is empty");
+        }
+      }
+      
+      console.log("Income details received as object:", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching income details:", error);
+      throw error;
+    }
   },
 
   saveIncomeDetails: async (data: IncomeDetailsInput): Promise<IncomeDetailsInput> => {
@@ -284,8 +306,30 @@ export const profileApi = {
 
   // Expenses Details
   getExpensesDetails: async (personalId: string): Promise<ExpensesDetailsInput> => {
-    const response = await businessApi.get(`/client-data/expenses/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching expenses details for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/expenses/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Expenses details API raw response:", response);
+      
+      // Handle the response as an array and return the first item
+      const data = response.data;
+      if (Array.isArray(data)) {
+        if (data.length > 0) {
+          console.log("Expenses details received as array, returning first item:", data[0]);
+          return data[0];
+        } else {
+          console.log("Expenses details array is empty");
+        }
+      }
+      
+      console.log("Expenses details received as object:", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching expenses details:", error);
+      throw error;
+    }
   },
 
   saveExpensesDetails: async (data: ExpensesDetailsInput): Promise<ExpensesDetailsInput> => {
@@ -300,8 +344,30 @@ export const profileApi = {
 
   // Assets
   getAssets: async (personalId: string): Promise<AssetInput> => {
-    const response = await businessApi.get(`/client-data/assets/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching assets for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/assets/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Assets API raw response:", response);
+      
+      // Handle the response as an array and return the first item
+      const data = response.data;
+      if (Array.isArray(data)) {
+        if (data.length > 0) {
+          console.log("Assets received as array, returning first item:", data[0]);
+          return data[0];
+        } else {
+          console.log("Assets array is empty");
+        }
+      }
+      
+      console.log("Assets received as object:", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+      throw error;
+    }
   },
 
   saveAssets: async (data: AssetInput): Promise<AssetInput> => {
@@ -316,8 +382,26 @@ export const profileApi = {
 
   // Liabilities
   getLiabilities: async (personalId: string): Promise<LiabilityInput[]> => {
-    const response = await businessApi.get(`/client-data/liabilities/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching liabilities for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/liabilities/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Liabilities API raw response:", response);
+      
+      // Liabilities should always be an array
+      const data = response.data;
+      if (Array.isArray(data)) {
+        console.log(`Found ${data.length} liabilities`);
+        return data;
+      } else {
+        console.log("Liabilities received as non-array, wrapping in array:", data);
+        return data ? [data] : [];
+      }
+    } catch (error) {
+      console.error("Error fetching liabilities:", error);
+      throw error;
+    }
   },
 
   saveLiability: async (data: LiabilityInput): Promise<LiabilityInput> => {
@@ -336,8 +420,18 @@ export const profileApi = {
 
   // Goals and Wishes
   getGoalsAndWishes: async (personalId: string): Promise<GoalsAndWishesInput> => {
-    const response = await businessApi.get(`/client-data/goals-wishes/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching goals and wishes for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/goals-wishes/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Goals and wishes API raw response:", response);
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching goals and wishes:", error);
+      throw error;
+    }
   },
 
   saveGoalsAndWishes: async (data: GoalsAndWishesInput): Promise<GoalsAndWishesInput> => {
@@ -352,8 +446,18 @@ export const profileApi = {
 
   // Risk Appetite
   getRiskAppetite: async (personalId: string): Promise<RiskAppetiteInput> => {
-    const response = await businessApi.get(`/client-data/risk-appetite/${personalId}`);
-    return response.data;
+    try {
+      console.log(`Fetching risk appetite for personalId: ${personalId}`);
+      const response = await businessApi.get(`/client-data/risk-appetite/${personalId}`);
+      
+      // Log the raw response for debugging
+      console.log("Risk appetite API raw response:", response);
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching risk appetite:", error);
+      throw error;
+    }
   },
 
   saveRiskAppetite: async (data: RiskAppetiteInput): Promise<RiskAppetiteInput> => {
@@ -364,6 +468,13 @@ export const profileApi = {
   updateRiskAppetite: async (data: RiskAppetiteInput): Promise<RiskAppetiteInput> => {
     const response = await businessApi.put(`/client-data/risk-appetite/${data.riskAppetiteId}`, data);
     return response.data;
+  },
+
+  // Delete Personal Details (Client)
+  deletePersonalDetails: async (personalId: string): Promise<void> => {
+    console.log(`Deleting personal details for personalId: ${personalId}`);
+    await businessApi.delete(`/personal-details/${personalId}`);
+    console.log('Personal details deleted successfully');
   }
 };
 

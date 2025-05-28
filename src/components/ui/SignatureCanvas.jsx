@@ -160,7 +160,7 @@ const SignatureCanvas = ({
 
   return (
     <div className="signature-canvas-container">
-      <div className="border border-gray-300 rounded-md mb-2">
+      <div className="border border-gray-300 dark:border-gray-600 rounded-md mb-2 bg-white">
         <canvas
           ref={canvasRef}
           className="signature-canvas"
@@ -177,25 +177,32 @@ const SignatureCanvas = ({
             cursor: "pen",
             width: "100%",
             height: "150px",
-            display: "block"
+            display: "block",
+            backgroundColor: "white"
           }}
         />
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <Button 
           type="button" 
           variant="outline" 
           onClick={clearCanvas}
-          className="text-sm"
+          className="text-sm border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={!hasContent}
         >
           {clearButtonText}
         </Button>
-        {hasContent && (
-          <span className="text-xs text-gray-500 italic self-center">
-            You can continue drawing at any time
-          </span>
-        )}
+        <div className="text-right">
+          {hasContent ? (
+            <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+              You can continue drawing at any time
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              Draw your signature above
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
